@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  ai-service:
+    build: .
+    container_name: english-learning-ai-service
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      - ./app:/app/app
+    restart: unless-stopped
+    networks:
+      - english-learning-network
+
+networks:
+  english-learning-network:
+    external: true

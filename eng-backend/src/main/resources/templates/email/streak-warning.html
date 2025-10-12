@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Streak Warning - English Learning Platform</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff3e0;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            border: 3px solid #ff6b6b;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .warning-icon {
+            font-size: 80px;
+            margin-bottom: 15px;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        .logo {
+            font-size: 26px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        .title {
+            font-size: 30px;
+            color: #e74c3c;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        .streak-badge {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 25px 0;
+            text-align: center;
+            box-shadow: 0 6px 20px rgba(245, 87, 108, 0.4);
+        }
+        .streak-number {
+            font-size: 60px;
+            font-weight: bold;
+            display: block;
+            margin: 10px 0;
+        }
+        .streak-label {
+            font-size: 20px;
+            margin-top: 10px;
+        }
+        .content {
+            margin-bottom: 25px;
+            font-size: 16px;
+        }
+        .urgent-box {
+            background-color: #fff3cd;
+            border: 2px solid #ffc107;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 25px 0;
+        }
+        .urgent-box h3 {
+            color: #ff6b00;
+            margin-top: 0;
+        }
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+            color: white;
+            padding: 18px 45px;
+            text-decoration: none;
+            border-radius: 30px;
+            font-weight: bold;
+            font-size: 18px;
+            margin: 20px 0;
+            transition: transform 0.3s;
+            box-shadow: 0 4px 15px rgba(238, 90, 111, 0.4);
+        }
+        .cta-button:hover {
+            transform: scale(1.08);
+        }
+        .goal-reminder {
+            background-color: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 25px 0;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="warning-icon">🔥</div>
+            <div class="logo" th:text="${appName}">English Learning Platform</div>
+            <h1 class="title">Don't Lose Your Streak!</h1>
+        </div>
+
+        <div class="content">
+            <p><strong>Hey <span th:text="${userName}">User</span>,</strong></p>
+            <p><strong>⚠️ URGENT REMINDER:</strong> You haven't practiced today, and your amazing streak is at risk!</p>
+        </div>
+
+        <div class="streak-badge">
+            <div>🏆 Your Current Streak 🏆</div>
+            <span class="streak-number" th:text="${currentStreak}">15</span>
+            <div class="streak-label">Days Strong!</div>
+        </div>
+
+        <div class="urgent-box">
+            <h3>⏰ Time is Running Out!</h3>
+            <p><strong>You've worked so hard to build this streak.</strong> Don't let it end today!</p>
+            <p>Just <span th:text="${dailyGoal}">30</span> minutes of practice is all it takes to keep your momentum going.</p>
+        </div>
+
+        <div class="content" style="text-align: center;">
+            <p style="font-size: 18px; color: #e74c3c;">
+                <strong>💔 Your streak resets at midnight!</strong>
+            </p>
+            <p>But you still have time to save it! 🚀</p>
+        </div>
+
+        <div style="text-align: center;">
+            <a th:href="${practiceUrl}" class="cta-button">Practice Now & Save Your Streak! 💪</a>
+        </div>
+
+        <div class="goal-reminder">
+            <h3 style="color: #1976d2; margin-top: 0;">📝 Quick Practice Ideas</h3>
+            <ul style="margin: 10px 0; padding-left: 20px;">
+                <li>Complete a 5-minute vocabulary quiz</li>
+                <li>Practice pronunciation with a short dialogue</li>
+                <li>Review today's grammar lesson</li>
+                <li>Watch a short learning video</li>
+            </ul>
+            <p style="margin-bottom: 0;">Every minute counts towards maintaining your streak!</p>
+        </div>
+
+        <div class="content" style="margin-top: 30px; text-align: center;">
+            <p><strong>Remember:</strong> Champions never give up! Your future self will thank you! 🌟</p>
+        </div>
+
+        <div class="footer">
+            <p>Cheering you on,<br/>The <span th:text="${appName}">English Learning Platform</span> Team 💙</p>
+            <p>
+                Need help? Contact us at
+                <a th:href="'mailto:' + ${supportEmail}" th:text="${supportEmail}">support@example.com</a>
+            </p>
+            <p>&copy; <span th:text="${currentYear}">2024</span> <span th:text="${appName}">English Learning Platform</span>. All rights reserved.</p>
+            <p style="font-size: 12px; color: #999;">
+                You're receiving this email because you have an active learning streak.
+                You can update your preferences in your account settings.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

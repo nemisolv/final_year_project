@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Learning Reminder - English Learning Platform</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .reminder-icon {
+            font-size: 70px;
+            margin-bottom: 15px;
+        }
+        .logo {
+            font-size: 26px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        .title {
+            font-size: 28px;
+            color: #3498db;
+            margin-bottom: 15px;
+        }
+        .content {
+            margin-bottom: 25px;
+        }
+        .stats-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 10px;
+            margin: 25px 0;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .stat-item {
+            text-align: center;
+            background-color: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .stat-number {
+            font-size: 28px;
+            font-weight: bold;
+            display: block;
+        }
+        .stat-label {
+            font-size: 12px;
+            margin-top: 5px;
+            opacity: 0.9;
+        }
+        .motivation-box {
+            background-color: #fff3e0;
+            border-left: 4px solid #ff9800;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 25px 0;
+        }
+        .motivation-box h3 {
+            color: #f57c00;
+            margin-top: 0;
+        }
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 35px;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: bold;
+            margin: 20px 0;
+            transition: transform 0.3s;
+        }
+        .cta-button:hover {
+            transform: scale(1.05);
+        }
+        .goal-section {
+            background-color: #e8f5e9;
+            border: 2px solid #4caf50;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 25px 0;
+        }
+        .goal-section h3 {
+            color: #2e7d32;
+            margin-top: 0;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="reminder-icon">⏰</div>
+            <div class="logo" th:text="${appName}">English Learning Platform</div>
+            <h1 class="title">Time to Learn!</h1>
+        </div>
+
+        <div class="content">
+            <p><strong>Hello <span th:text="${userName}">User</span>,</strong></p>
+            <p>Don't forget to practice your English today! Consistency is the key to mastering any language.</p>
+        </div>
+
+        <div class="stats-section">
+            <h3 style="text-align: center; margin-top: 0;">📊 Your Progress</h3>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <span class="stat-number" th:text="${currentLevel}">5</span>
+                    <span class="stat-label">Level</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" th:text="${currentStreak}">7</span>
+                    <span class="stat-label">Day Streak 🔥</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" th:text="${totalXp}">1250</span>
+                    <span class="stat-label">Total XP</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="goal-section">
+            <h3>🎯 Today's Goal</h3>
+            <p style="margin: 10px 0;">
+                <strong th:text="${dailyGoal}">30</strong> minutes of practice
+            </p>
+            <p style="font-size: 14px; color: #666; margin: 5px 0;">
+                Just a few minutes each day can make a huge difference!
+            </p>
+        </div>
+
+        <div class="motivation-box">
+            <h3>💪 Motivation</h3>
+            <p th:text="${motivation}">Keep it up! You're building a great habit!</p>
+        </div>
+
+        <div style="text-align: center;">
+            <a th:href="${learningUrl}" class="cta-button">Continue Learning 🚀</a>
+        </div>
+
+        <div class="content" style="margin-top: 30px; text-align: center;">
+            <p><strong>Remember:</strong> Small steps every day lead to big achievements! 🌟</p>
+        </div>
+
+        <div class="footer">
+            <p>Best regards,<br/>The <span th:text="${appName}">English Learning Platform</span> Team</p>
+            <p>
+                Need help? Contact us at
+                <a th:href="'mailto:' + ${supportEmail}" th:text="${supportEmail}">support@example.com</a>
+            </p>
+            <p>&copy; <span th:text="${currentYear}">2024</span> <span th:text="${appName}">English Learning Platform</span>. All rights reserved.</p>
+            <p style="font-size: 12px; color: #999;">
+                You're receiving this email because you have notifications enabled.
+                You can update your preferences in your account settings.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

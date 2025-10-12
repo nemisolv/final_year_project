@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Verification - English Learning Platform</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px 20px;
+        }
+        .email-wrapper {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        .logo {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            letter-spacing: -0.5px;
+        }
+        .title {
+            font-size: 20px;
+            font-weight: 500;
+            opacity: 0.95;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .greeting {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 20px;
+        }
+        .intro-text {
+            color: #4a5568;
+            margin-bottom: 30px;
+            line-height: 1.7;
+        }
+        .otp-section {
+            background: linear-gradient(135deg, #f6f8fb 0%, #e9ecef 100%);
+            border: 2px dashed #667eea;
+            padding: 30px;
+            border-radius: 12px;
+            text-align: center;
+            margin: 30px 0;
+        }
+        .otp-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #667eea;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+        }
+        .otp-code {
+            font-size: 42px;
+            font-weight: bold;
+            color: #2d3748;
+            letter-spacing: 8px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            display: inline-block;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .otp-instructions {
+            font-size: 13px;
+            color: #718096;
+            margin-top: 15px;
+        }
+        .divider {
+            text-align: center;
+            margin: 30px 0;
+            position: relative;
+        }
+        .divider::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            width: 100%;
+            height: 1px;
+            background: #e2e8f0;
+        }
+        .divider-text {
+            background: white;
+            padding: 0 15px;
+            color: #a0aec0;
+            font-size: 13px;
+            font-weight: 500;
+            position: relative;
+            display: inline-block;
+        }
+        .verification-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 14px 40px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        .verification-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+        }
+        .button-container {
+            text-align: center;
+            margin: 25px 0;
+        }
+        .info-box {
+            background-color: #fff5e6;
+            border-left: 4px solid #f59e0b;
+            padding: 18px;
+            border-radius: 8px;
+            margin: 25px 0;
+        }
+        .info-box-title {
+            font-weight: 600;
+            color: #92400e;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+        }
+        .info-box-title::before {
+            content: '⏱';
+            margin-right: 8px;
+            font-size: 18px;
+        }
+        .info-box-content {
+            color: #78350f;
+            font-size: 14px;
+        }
+        .benefits {
+            background-color: #f0fdf4;
+            padding: 25px;
+            border-radius: 10px;
+            margin: 25px 0;
+        }
+        .benefits-title {
+            font-weight: 600;
+            color: #166534;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        .benefits ul {
+            list-style: none;
+            padding: 0;
+        }
+        .benefits li {
+            color: #166534;
+            padding: 8px 0;
+            padding-left: 25px;
+            position: relative;
+        }
+        .benefits li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: #10b981;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        .footer {
+            background-color: #f7fafc;
+            padding: 30px;
+            text-align: center;
+            border-top: 1px solid #e2e8f0;
+        }
+        .footer-text {
+            color: #718096;
+            font-size: 14px;
+            margin: 10px 0;
+        }
+        .footer-link {
+            color: #667eea;
+            text-decoration: none;
+        }
+        .footer-link:hover {
+            text-decoration: underline;
+        }
+        .footer-copyright {
+            color: #a0aec0;
+            font-size: 12px;
+            margin-top: 20px;
+        }
+        .security-notice {
+            background-color: #f0f9ff;
+            border: 1px solid #bae6fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-size: 13px;
+            color: #075985;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-wrapper">
+        <div class="container">
+            <!-- Header -->
+            <div class="header">
+                <div class="logo">📚 <span th:text="${appName}">English Learning Platform</span></div>
+                <div class="title">Email Verification</div>
+            </div>
+
+            <!-- Content -->
+            <div class="content">
+                <div class="greeting">Hello <span th:text="${userName}">User</span>! 👋</div>
+
+                <p class="intro-text">
+                    Thank you for joining our English Learning Platform! To complete your registration and unlock all features,
+                    please verify your email address using the verification code below.
+                </p>
+
+                <!-- OTP Section -->
+                <div class="otp-section">
+                    <div class="otp-label">Your Verification Code</div>
+                    <div class="otp-code" th:text="${otpCode}">ABC123</div>
+                    <div class="otp-instructions">Enter this code on the verification page to activate your account</div>
+                </div>
+
+                <!-- Divider -->
+                <div class="divider">
+                    <span class="divider-text">OR CLICK THE BUTTON BELOW</span>
+                </div>
+
+                <!-- Verification Button -->
+                <div class="button-container">
+                    <a th:href="${verificationLink}" class="verification-button">
+                        Verify Email Address
+                    </a>
+                </div>
+
+                <!-- Expiration Warning -->
+                <div class="info-box">
+                    <div class="info-box-title">Time Sensitive</div>
+                    <div class="info-box-content">
+                        This verification code will expire at <strong th:text="${expirationTime}">3 minutes</strong>.
+                        If you don't verify within this time, you'll need to request a new code.
+                    </div>
+                </div>
+
+                <!-- Benefits -->
+                <div class="benefits">
+                    <div class="benefits-title">After verification, you'll be able to:</div>
+                    <ul>
+                        <li>Access personalized learning paths</li>
+                        <li>Track your progress and achievements</li>
+                        <li>Receive important notifications and updates</li>
+                        <li>Join our community of learners</li>
+                        <li>Unlock premium features and content</li>
+                    </ul>
+                </div>
+
+                <!-- Security Notice -->
+                <div class="security-notice">
+                    <strong>🔒 Security Notice:</strong> Never share this code with anyone. Our team will never ask for your verification code.
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="footer">
+                <p class="footer-text">
+                    If you didn't create an account, you can safely ignore this email.
+                </p>
+                <p class="footer-text">
+                    Need help? Contact us at
+                    <a th:href="'mailto:' + ${supportEmail}" class="footer-link" th:text="${supportEmail}">support@example.com</a>
+                </p>
+                <p class="footer-text" style="margin-top: 20px;">
+                    Best regards,<br>
+                    <strong>The <span th:text="${appName}">English Learning Platform</span> Team</strong>
+                </p>
+                <p class="footer-copyright">
+                    &copy; <span th:text="${currentYear}">2024</span> <span th:text="${appName}">English Learning Platform</span>. All rights reserved.
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

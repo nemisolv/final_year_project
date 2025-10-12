@@ -1,0 +1,148 @@
+version: "3.1"
+
+nlu:
+  # Greetings
+  - intent: greeting
+    examples: |
+      - hello
+      - hi
+      - hey
+      - good morning
+      - good afternoon
+      - good evening
+      - hi there
+      - hey there
+      - greetings
+
+  # Goodbyes
+  - intent: goodbye
+    examples: |
+      - bye
+      - goodbye
+      - see you later
+      - see you
+      - talk to you soon
+      - have a nice day
+      - catch you later
+      - farewell
+
+  # Restaurant Booking
+  - intent: book_restaurant
+    examples: |
+      - I want to book a table
+      - book a table for [2](number) people
+      - reserve a table for [tonight](time)
+      - I'd like to make a reservation
+      - can I book a table for [4](number) at [7pm](time)
+      - reserve a table for [tomorrow](time)
+      - I need a table for [two](number)
+      - book me a table
+      - make a reservation please
+
+  # Hotel Booking
+  - intent: book_hotel
+    examples: |
+      - I need a hotel room
+      - book a room for [two nights](duration)
+      - I want to make a hotel reservation
+      - reserve a hotel room
+      - find me a hotel
+      - I need accommodation for [3 days](duration)
+      - book a room from [Monday](date) to [Wednesday](date)
+      - I'd like to reserve a hotel room
+
+  # Asking for Directions
+  - intent: ask_directions
+    examples: |
+      - how do I get to [the station](location)
+      - where is [the nearest bank](location)
+      - can you direct me to [the museum](location)
+      - how far is [the airport](location)
+      - what's the best way to [downtown](location)
+      - directions to [the hotel](location)
+      - how can I reach [the restaurant](location)
+
+  # Ordering Food
+  - intent: order_food
+    examples: |
+      - I'd like to order [a pizza](food_item)
+      - can I have [a burger](food_item)
+      - I want to order [takeout](order_type)
+      - what's on the menu
+      - I'll have [the special](food_item)
+      - can I order [pasta](food_item)
+      - I'd like [the chicken](food_item)
+      - give me [a salad](food_item)
+
+  # Making Complaints
+  - intent: complaint
+    examples: |
+      - I'm not satisfied with the service
+      - this is not what I ordered
+      - I have a complaint
+      - the food is cold
+      - this is unacceptable
+      - I'm unhappy with this
+      - the service is terrible
+      - this isn't right
+
+  # Requesting Help
+  - intent: request_help
+    examples: |
+      - can you help me
+      - I need assistance
+      - could you please help
+      - I'm having trouble with this
+      - I don't understand
+      - help me please
+      - I need help
+      - can you assist me
+
+  # Asking for Information
+  - intent: ask_info
+    examples: |
+      - what is this
+      - tell me about this
+      - can you explain
+      - what does this mean
+      - I want to know more
+      - give me information
+      - explain this to me
+      - what's that
+
+  # Thanking
+  - intent: thanks
+    examples: |
+      - thank you
+      - thanks
+      - thanks a lot
+      - thank you very much
+      - I appreciate it
+      - thanks so much
+      - much appreciated
+      - cheers
+
+  # Affirmation
+  - intent: affirm
+    examples: |
+      - yes
+      - yeah
+      - correct
+      - right
+      - exactly
+      - that's right
+      - sure
+      - ok
+      - okay
+
+  # Denial
+  - intent: deny
+    examples: |
+      - no
+      - nope
+      - not really
+      - I don't think so
+      - that's wrong
+      - incorrect
+      - no way
+      - never

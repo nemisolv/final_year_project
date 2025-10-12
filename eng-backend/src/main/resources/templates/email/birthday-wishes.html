@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy Birthday - English Learning Platform</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .birthday-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        .title {
+            font-size: 32px;
+            color: #e74c3c;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        .age {
+            font-size: 24px;
+            color: #9b59b6;
+            margin-bottom: 20px;
+        }
+        .content {
+            font-size: 16px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .birthday-message {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 10px;
+            margin: 25px 0;
+            text-align: center;
+        }
+        .birthday-message p {
+            margin: 10px 0;
+            font-size: 18px;
+            line-height: 1.8;
+        }
+        .gift-box {
+            background-color: #fff3e0;
+            border: 2px dashed #ff9800;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin: 25px 0;
+        }
+        .gift-box h3 {
+            color: #f57c00;
+            margin-bottom: 10px;
+        }
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 40px;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: bold;
+            margin: 20px 0;
+            transition: transform 0.3s;
+        }
+        .cta-button:hover {
+            transform: scale(1.05);
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+        .balloons {
+            text-align: center;
+            font-size: 40px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="birthday-icon">🎂</div>
+            <div class="logo" th:text="${appName}">English Learning Platform</div>
+            <h1 class="title">Happy Birthday!</h1>
+            <p class="age" th:if="${age != null}">
+                Celebrating <span th:text="${age}">25</span> wonderful years! 🎉
+            </p>
+        </div>
+
+        <div class="content">
+            <p><strong>Dear <span th:text="${userName}">User</span>,</strong></p>
+        </div>
+
+        <div class="birthday-message">
+            <p>🎊 On this special day, we want to wish you all the happiness in the world! 🎊</p>
+            <p>May this year bring you endless opportunities to learn, grow, and achieve your dreams!</p>
+            <p>Thank you for being part of our learning community. You inspire us every day! ✨</p>
+        </div>
+
+        <div class="balloons">
+            🎈 🎉 🎁 🎊 🎈
+        </div>
+
+        <div class="gift-box">
+            <h3>🎁 Birthday Special Gift!</h3>
+            <p>We've added <strong>100 bonus XP</strong> to your account!</p>
+            <p>Use it to unlock premium content and accelerate your learning journey!</p>
+        </div>
+
+        <div style="text-align: center;">
+            <a href="#" class="cta-button">Start Learning Today 🚀</a>
+        </div>
+
+        <div class="content" style="margin-top: 30px;">
+            <p>Once again, Happy Birthday! May all your wishes come true! 🌟</p>
+        </div>
+
+        <div class="footer">
+            <p>With love from the <span th:text="${appName}">English Learning Platform</span> Team 💙</p>
+            <p>
+                Need help? Contact us at
+                <a th:href="'mailto:' + ${supportEmail}" th:text="${supportEmail}">support@example.com</a>
+            </p>
+            <p>&copy; <span th:text="${currentYear}">2024</span> <span th:text="${appName}">English Learning Platform</span>. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

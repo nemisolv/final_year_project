@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to English Learning Platform</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        .welcome-message {
+            font-size: 24px;
+            color: #27ae60;
+            margin-bottom: 20px;
+        }
+        .content {
+            margin-bottom: 30px;
+        }
+        .verification-section {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .verification-button {
+            display: inline-block;
+            background-color: #3498db;
+            color: white;
+            padding: 12px 30px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .verification-button:hover {
+            background-color: #2980b9;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+        .warning {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">📚 English Learning Platform</div>
+            <div class="welcome-message">Welcome aboard!</div>
+        </div>
+        
+        <div class="content">
+            <p>Hello <strong th:text="${firstName}">User</strong>,</p>
+            
+            <p>Thank you for registering with our English Learning Platform! We're excited to have you join our community of learners.</p>
+            
+            <p>To complete your registration and start your learning journey, please verify your email address by clicking the button below:</p>
+            
+            <div class="verification-section">
+                <a th:href="@{http://localhost:8080/api/auth/verify-email(token=${verificationToken})}" 
+                   class="verification-button">Verify Email Address</a>
+            </div>
+            
+            <div class="warning">
+                <strong>Important:</strong> This verification link will expire in 24 hours. If you don't verify your email within this time, you'll need to request a new verification email.
+            </div>
+            
+            <p>If the button doesn't work, you can copy and paste this link into your browser:</p>
+            <p style="word-break: break-all; background-color: #f8f9fa; padding: 10px; border-radius: 5px;">
+                <span th:text="@{http://localhost:8080/api/auth/verify-email(token=${verificationToken})}">verification-link</span>
+            </p>
+            
+            <p>Once verified, you'll be able to:</p>
+            <ul>
+                <li>Access all learning materials</li>
+                <li>Track your progress</li>
+                <li>Join study groups</li>
+                <li>Take quizzes and tests</li>
+                <li>Connect with other learners</li>
+            </ul>
+        </div>
+        
+        <div class="footer">
+            <p>If you didn't create an account with us, please ignore this email.</p>
+            <p>Best regards,<br>The English Learning Platform Team</p>
+            <p><small>This is an automated message. Please do not reply to this email.</small></p>
+        </div>
+    </div>
+</body>
+</html>

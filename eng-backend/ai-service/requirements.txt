@@ -1,0 +1,41 @@
+# FastAPI and web framework
+fastapi==0.115.0
+uvicorn[standard]==0.32.0
+python-multipart==0.0.17
+pydantic==2.10.3
+pydantic-settings==2.6.1
+
+# OpenAI and AI libraries
+openai==1.57.4
+langchain==0.3.13
+langchain-openai==0.2.13
+langchain-community==0.3.13
+
+# Speech recognition and TTS
+faster-whisper==1.1.0
+vosk==0.3.45
+SpeechRecognition==3.13.0
+pyttsx3==2.98
+gTTS==2.5.4
+pydub==0.25.1
+
+# Grammar and language processing
+language-tool-python==2.8.1
+spacy==3.8.3
+textblob==0.18.0.post0
+
+# NLU and dialogue management
+rasa==3.6.20
+
+# HTTP client
+httpx==0.28.1
+requests==2.32.3
+
+# Database (if needed)
+sqlalchemy==2.0.36
+pymysql==1.1.1
+
+# Utils
+python-dotenv==1.0.1
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
