@@ -12,30 +12,9 @@ export default function AdminDashboardPage() {
   const [query, setQuery] = useState("");
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen w-full">
       <div className="flex min-h-screen">
-        {/* Sidebar */}
-        <aside className="w-64 border-r p-4 hidden md:block">
-          <h2 className="text-xl font-bold mb-6">Admin</h2>
-          <nav className="space-y-2">
-            <a className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-accent" href="#">
-              <BarChart3 className="h-4 w-4" /> Tổng quan
-            </a>
-            <a className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-accent" href="#">
-              <Users className="h-4 w-4" /> Người dùng
-            </a>
-            <a className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-accent" href="#">
-              <BookOpen className="h-4 w-4" /> Khoá học
-            </a>
-            <a className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-accent" href="#">
-              <Settings className="h-4 w-4" /> Cấu hình hệ thống
-            </a>
-          </nav>
-        </aside>
-
-        {/* Main */}
         <main className="flex-1 p-6 md:p-8 space-y-6">
-          {/* Topbar */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
               <h1 className="text-2xl font-bold">Bảng điều khiển quản trị</h1>
