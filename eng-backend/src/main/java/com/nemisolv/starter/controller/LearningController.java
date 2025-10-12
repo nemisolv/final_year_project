@@ -4,13 +4,19 @@ import com.nemisolv.starter.annotation.audit.LearningAudit;
 import com.nemisolv.starter.annotation.audit.ProgressAudit;
 import com.nemisolv.starter.annotation.audit.AIAudit;
 import com.nemisolv.starter.payload.ApiResponse;
+import com.nemisolv.starter.payload.ai.ChatRequest;
+import com.nemisolv.starter.payload.ai.ChatResponse;
 import com.nemisolv.starter.payload.response.LessonResponse;
 import com.nemisolv.starter.payload.response.QuizResponse;
 import com.nemisolv.starter.payload.response.ProgressResponse;
 import com.nemisolv.starter.payload.response.AIResponse;
 
+import com.nemisolv.starter.service.ChatAIService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
@@ -28,7 +34,7 @@ import java.util.Map;
 @Slf4j
 public class LearningController {
     
-    
+    private final ChatAIService chatAIService;
     /**
      * Start a lesson - logs learning activity for AI analysis
      */
@@ -246,4 +252,8 @@ public class LearningController {
         log.info("User achieved milestone: {}", milestone);
         return ApiResponse.success(response);
     }
+
+
+
+
 }

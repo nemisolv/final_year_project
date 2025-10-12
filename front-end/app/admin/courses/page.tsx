@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { courseService, categoryService } from '@/services/courseService';
 import { Course, DifficultyLevel, Category } from '@/types/course';
@@ -52,24 +52,25 @@ export default function CoursesManagementPage() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
+
+  // State for filter inputs
+  const [searchInput, setSearchInput] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>('all');
   const [selectedPublished, setSelectedPublished] = useState<string>('all');
+  
+  // State for pagination
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
   const [pageSize] = useState(10);
+  
+  // State for delete confirmation
   const [deleteCourseId, setDeleteCourseId] = useState<number | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-
-  useEffect(() => {
-    loadCategories();
-  }, []);
-
-  useEffect(() => {
-    loadCourses();
-  }, [currentPage, selectedCategory, selectedDifficulty, selectedPublished]);
+  
+  // Applied search term state
+  const [appliedSearch, setAppliedSearch] = useState('');
 
   const loadCategories = async () => {
     try {
@@ -81,7 +82,7 @@ export default function CoursesManagementPage() {
     }
   };
 
-  const loadCourses = async () => {
+  const loadCourses = useCallback(async () => {
     try {
       setIsLoading(true);
       const filters: any = {
@@ -91,8 +92,8 @@ export default function CoursesManagementPage() {
         sortDir: 'DESC' as const,
       };
 
-      if (searchQuery) {
-        filters.search = searchQuery;
+      if (appliedSearch) {
+        filters.search = appliedSearch;
       }
 
       if (selectedCategory !== 'all') {
@@ -117,11 +118,19 @@ export default function CoursesManagementPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [currentPage, pageSize, appliedSearch, selectedCategory, selectedDifficulty, selectedPublished]);
+
+  useEffect(() => {
+    loadCategories();
+  }, []);
+
+  useEffect(() => {
+    loadCourses();
+  }, [loadCourses]);
 
   const handleSearch = () => {
     setCurrentPage(0);
-    loadCourses();
+    setAppliedSearch(searchInput);
   };
 
   const handleSearchKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -131,7 +140,8 @@ export default function CoursesManagementPage() {
   };
 
   const handleResetFilters = () => {
-    setSearchQuery('');
+    setSearchInput('');
+    setAppliedSearch('');
     setSelectedCategory('all');
     setSelectedDifficulty('all');
     setSelectedPublished('all');
@@ -184,6 +194,7 @@ export default function CoursesManagementPage() {
     };
 
     const badge = badges[level];
+    if (!badge) return null;
     return (
       <span className={`px-2 py-1 rounded-full text-xs font-medium ${badge.className}`}>
         {badge.label}
@@ -191,7 +202,7 @@ export default function CoursesManagementPage() {
     );
   };
 
-  const hasActiveFilters = selectedCategory !== 'all' || selectedDifficulty !== 'all' || selectedPublished !== 'all' || searchQuery !== '';
+  const hasActiveFilters = selectedCategory !== 'all' || selectedDifficulty !== 'all' || selectedPublished !== 'all' || searchInput !== '';
 
   return (
     <div className="container mx-auto py-8 px-4">
@@ -218,8 +229,8 @@ export default function CoursesManagementPage() {
                 <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Tìm kiếm theo tiêu đề khóa học..."
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
+                  value={searchInput}
+                  onChange={e => setSearchInput(e.target.value)}
                   onKeyPress={handleSearchKeyPress}
                   className="pl-10"
                 />

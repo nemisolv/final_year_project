@@ -24,8 +24,6 @@ language-tool-python==2.8.1
 spacy==3.8.3
 textblob==0.18.0.post0
 
-# NLU and dialogue management
-rasa==3.6.20
 
 # HTTP client
 httpx==0.28.1
