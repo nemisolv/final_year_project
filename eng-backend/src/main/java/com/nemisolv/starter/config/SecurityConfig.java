@@ -37,7 +37,9 @@ public class SecurityConfig {
 
     private static final String[] PUBLIC_ENDPOINTS = {
         "/auth/**",
-        "/error"
+        "/error",
+        "/api/v1/testimonials/featured",
+
     };
 
     @Bean

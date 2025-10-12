@@ -43,7 +43,7 @@ public class AdminUserRepository {
                 up.is_onboarded,
                 GROUP_CONCAT(r.name) as roles
             FROM users u
-            LEFT JOIN user_profile up ON u.id = up.user_id
+            LEFT JOIN user_profiles  up ON u.id = up.user_id
             LEFT JOIN user_roles ur ON u.id = ur.user_id
             LEFT JOIN roles r ON ur.role_id = r.id
             GROUP BY u.id, u.email, u.username, u.status, u.email_verified,
@@ -90,7 +90,7 @@ public class AdminUserRepository {
                 up.is_onboarded,
                 GROUP_CONCAT(r.name) as roles
             FROM users u
-            LEFT JOIN user_profile up ON u.id = up.user_id
+            LEFT JOIN user_profiles s up ON u.id = up.user_id
             LEFT JOIN user_roles ur ON u.id = ur.user_id
             LEFT JOIN roles r ON ur.role_id = r.id
             WHERE u.id = ?
@@ -137,7 +137,7 @@ public class AdminUserRepository {
 
         // Create user profile
         String profileSql = """
-            INSERT INTO user_profile (user_id, name, phone_number, is_onboarded, created_at)
+            INSERT INTO user_profiles  (user_id, name, phone_number, is_onboarded, created_at)
             VALUES (:userId, :name, :phoneNumber, :isOnboarded, :createdAt)
             """;
 
@@ -191,7 +191,7 @@ public class AdminUserRepository {
 
         // Update user profile
         String profileSql = """
-            UPDATE user_profile
+            UPDATE user_profiles 
             SET name = :name, phone_number = :phoneNumber, updated_at = :updatedAt
             WHERE user_id = :userId
             """;
@@ -237,7 +237,7 @@ public class AdminUserRepository {
         namedParameterJdbcTemplate.update(deleteRolesSql, params);
 
         // Delete user profile
-        String deleteProfileSql = "DELETE FROM user_profile WHERE user_id = :userId";
+        String deleteProfileSql = "DELETE FROM user_profiles  WHERE user_id = :userId";
         namedParameterJdbcTemplate.update(deleteProfileSql, params);
 
         // Delete user

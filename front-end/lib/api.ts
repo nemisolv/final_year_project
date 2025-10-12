@@ -8,48 +8,48 @@ export interface ApiResponse<T> {
 }
 
 export interface AuthenticationResponse {
-  access_token: string;
-  refresh_token: string;
+  accessToken: string;
+  refreshToken: string;
   roles?: Record<string, string[]>; // Role -> Permissions mapping
 }
 
 export interface User {
   id: number;
-  user_id: number;
+  userId: number;
   email: string;
   username: string;
-  full_name?: string;
+  fullName?: string;
   name?: string;
   roles?: string[] | null;
   permissions?: Record<string, string[]>; // Role -> Permissions mapping
-  email_verified?: boolean;
+  emailVerified?: boolean;
   status?: string;
   enabled?: boolean;
-  last_login?: string;
-  created_at?: string;
-  updated_at?: string;
-  is_onboarded: boolean;
+  lastLogin?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  isOnboarded: boolean;
   avatar?: string; // Profile image URL
   // Profile fields
-  english_level?: string;
-  learning_goals?: string;
-  preferred_accent?: string;
-  daily_study_goal?: number;
-  notification_enabled?: boolean;
-  privacy_level?: string;
+  englishLevel?: string;
+  learningGoals?: string;
+  preferredAccent?: string;
+  dailyStudyGoal?: number;
+  notificationEnabled?: boolean;
+  privacyLevel?: string;
   dob?: string;
   onboarded?: boolean;
 }
 
 export interface UserDashboardStats {
-  current_streak_days: number;
-  daily_study_goal_minutes: number;
-  minutes_studied_today: number;
-  total_xp: number;
-  current_level: number;
-  total_study_time: number;
-  lessons_completed: number;
-  exercises_completed: number;
+  currentStreakDays: number;
+  dailyStudyGoalMinutes: number;
+  minutesStudiedToday: number;
+  totalXp: number;
+  currentLevel: number;
+  totalStudyTime: number;
+  lessonsCompleted: number;
+  exercisesCompleted: number;
 }
 
 export interface PaginatedResponse<T> {
@@ -72,6 +72,21 @@ export interface PaginatedResponse<T> {
   numberOfElements: number;
   empty: boolean;
 }
+
+
+export interface Testimonial {
+  id: number;
+  content: string;
+  rating: number;
+  authorName: string;
+  authorTitle: string;
+  authorAvatarUrl?: string;
+}
+
+
+
+
+
 
 class ApiClient {
   private axiosInstance: AxiosInstance;
@@ -105,7 +120,7 @@ class ApiClient {
             const refreshToken = this.getRefreshToken();
             if (refreshToken) {
               const response = await this.refreshToken();
-              error.config.headers.Authorization = `Bearer ${response.access_token}`;
+              error.config.headers.Authorization = `Bearer ${response.accessToken}`;
               return this.axiosInstance(error.config);
             }
           } catch (refreshError) {
@@ -170,6 +185,29 @@ class ApiClient {
     }
   }
 
+
+   /**
+   * Lấy danh sách các testimonials nổi bật cho trang chủ.
+   * Đây là một API công khai, không cần xác thực.
+   */
+  async getFeaturedTestimonials(): Promise<Testimonial[]> {
+    try {
+      // Sử dụng axiosInstance để gọi đến endpoint đã định nghĩa trong controller
+      const response: AxiosResponse<ApiResponse<Testimonial[]>> = await this.axiosInstance.get(
+        '/api/v1/testimonials/featured'
+      );
+      // Trả về mảng dữ liệu bên trong thuộc tính `data` của ApiResponse
+      return response.data.data || [];
+    } catch (error) {
+      console.error("Failed to fetch featured testimonials:", error);
+      // Trả về mảng rỗng nếu có lỗi để trang không bị crash
+      return [];
+    }
+  }
+
+
+
+
   // Auth endpoints
   async login(email: string, password: string): Promise<AuthenticationResponse> {
     const response: AxiosResponse<ApiResponse<AuthenticationResponse>> = await this.axiosInstance.post(
@@ -179,8 +217,8 @@ class ApiClient {
 
     const authResponse = response.data.data;
     if (authResponse) {
-      this.setAccessToken(authResponse.access_token);
-      this.setRefreshToken(authResponse.refresh_token);
+      this.setAccessToken(authResponse.accessToken);
+      this.setRefreshToken(authResponse.refreshToken);
 
       // Store roles and permissions if available
       if (authResponse.roles) {
@@ -211,7 +249,7 @@ class ApiClient {
         // Call backend logout endpoint to invalidate session/token
         await this.axiosInstance.post<ApiResponse<void>>(
           API.endpoints.auth.logout,
-          { refresh_token: refreshToken }
+          {  refreshToken }
         );
       }
     } catch (error) {
@@ -238,13 +276,13 @@ class ApiClient {
 
     const response: AxiosResponse<ApiResponse<AuthenticationResponse>> = await this.axiosInstance.post(
       API.endpoints.auth.refreshToken,
-      { refresh_token: refreshToken }
+      {  refreshToken }
     );
 
     const authResponse = response.data.data;
     if (authResponse) {
-      this.setAccessToken(authResponse.access_token);
-      this.setRefreshToken(authResponse.refresh_token);
+      this.setAccessToken(authResponse.accessToken);
+      this.setRefreshToken(authResponse.refreshToken);
     }
 
     return authResponse!;
@@ -260,7 +298,7 @@ class ApiClient {
   async confirmPasswordReset(token: string, newPassword: string): Promise<void> {
     await this.axiosInstance.post<ApiResponse<void>>(
       API.endpoints.auth.resetPassword,
-      { token, new_password: newPassword }
+      { token,  newPassword }
     );
   }
 
@@ -354,10 +392,10 @@ class ApiClient {
 
   async submitOnboarding(data: {
     dob: string | null;
-    daily_study_goal_in_minutes: number;
-    short_introduction: string;
-    english_level: string;
-    learning_goals: string;
+    dailyStudyGoalInMinutes: number;
+    shortIntroduction: string;
+    englishLevel: string;
+    learningGoals: string;
   }): Promise<void> {
     await this.axiosInstance.post('/users/onboarding', data);
   }

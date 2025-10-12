@@ -22,9 +22,9 @@ public interface TestimonialMapper {
      * Chuyển đổi từ CreateRequest DTO sang một Entity mới.
      * Bỏ qua các trường do hệ thống tự sinh ra (id, createdAt, updatedAt).
      */
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true)
+//    @Mapping(target = "id", ignore = true)
+//    @Mapping(target = "createdAt", ignore = true)
+//    @Mapping(target = "updatedAt", ignore = true)
     Testimonial toEntity(TestimonialCreateRequest createRequest);
 
     /**
@@ -34,9 +34,9 @@ public interface TestimonialMapper {
      * @param testimonial   Entity hiện có trong DB (được đánh dấu là @MappingTarget).
      */
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE) // QUAN TRỌNG: Bỏ qua các trường null trong DTO
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "createdAt", ignore = true) // Không cho phép cập nhật ngày tạo
-    @Mapping(target = "updatedAt", ignore = true) // Service sẽ tự xử lý
+//    @Mapping(target = "id", ignore = true)
+//    @Mapping(target = "createdAt", ignore = true) // Không cho phép cập nhật ngày tạo
+//    @Mapping(target = "updatedAt", ignore = true) // Service sẽ tự xử lý
     void updateEntityFromDto(TestimonialUpdateRequest updateRequest, @MappingTarget Testimonial testimonial);
 
 }

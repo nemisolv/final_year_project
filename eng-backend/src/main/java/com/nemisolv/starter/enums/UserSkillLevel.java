@@ -2,7 +2,6 @@ package com.nemisolv.starter.enums;
 
 import lombok.Getter;
 
-@Getter
 public enum UserSkillLevel implements ValuableEnum {
 BEGINNER("BEGINNER"),
     ELEMENTARY("ELEMENTARY"),
@@ -14,5 +13,10 @@ BEGINNER("BEGINNER"),
 
     UserSkillLevel(String value) {
         this.value = value;
+    }
+
+    @Override
+    public String getValue() {
+        return value;
     }
 }
