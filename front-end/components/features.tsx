@@ -9,62 +9,74 @@ import {
   Smartphone,
   BookOpen,
   MessageCircle,
-  Target,
-  Zap
+  Zap,
+  BookCopy
 } from "lucide-react";
 import { motion } from "framer-motion";
+import { PlatformStats } from "@/lib/api";
 
-export function Features() {
+// Hàm để định dạng số lớn (10482 -> 10K+)
+const formatStatValue = (value: number) => {
+  if (value >= 10000) {
+    return `${Math.floor(value / 1000)}K+`;
+  }
+  if (value >= 1000) {
+     return `${(value / 1000).toFixed(1)}K+`.replace('.0', '');
+  }
+  return `${value}+`;
+};
+
+// Đây là Client Component, chỉ chịu trách nhiệm render UI và animation
+ function FeaturesContent({ statsData }: { statsData: PlatformStats }) {
   const features = [
     {
       icon: <Brain className="h-6 w-6" />,
       title: "AI Thông minh",
-      description: "AI cá nhân hoá lộ trình dựa trên trình độ và mục tiêu của bạn",
+      description: "AI cá nhân hoá lộ trình dựa trên trình độ và mục tiêu của bạn.",
       color: "bg-primary/10 text-primary"
     },
     {
       icon: <Headphones className="h-6 w-6" />,
       title: "Phát âm chuẩn",
-      description: "Luyện phát âm với công nghệ nhận diện giọng nói tiên tiến",
+      description: "Luyện phát âm với công nghệ nhận diện giọng nói tiên tiến.",
       color: "bg-primary/10 text-primary"
     },
     {
       icon: <Users className="h-6 w-6" />,
       title: "Cộng đồng học tập",
-      description: "Kết nối với hàng nghìn học viên khác và luyện tập cùng nhau",
+      description: "Kết nối với hàng nghìn học viên khác và luyện tập cùng nhau.",
       color: "bg-primary/10 text-primary"
     },
     {
       icon: <Trophy className="h-6 w-6" />,
       title: "Gamification",
-      description: "Học thông qua trò chơi, thử thách và hệ thống điểm thưởng",
+      description: "Học thông qua trò chơi, thử thách và hệ thống điểm thưởng.",
       color: "bg-primary/10 text-primary"
     },
     {
       icon: <Clock className="h-6 w-6" />,
       title: "Linh hoạt thời gian",
-      description: "Học mọi lúc, mọi nơi với lịch trình cá nhân hóa",
+      description: "Học mọi lúc, mọi nơi với lịch trình cá nhân hóa.",
       color: "bg-primary/10 text-primary"
     },
     {
       icon: <Smartphone className="h-6 w-6" />,
       title: "Đa nền tảng",
-      description: "Truy cập trên web, mobile app với đồng bộ dữ liệu",
+      description: "Truy cập trên web, mobile app với đồng bộ dữ liệu.",
       color: "bg-primary/10 text-primary"
     }
   ];
 
   const stats = [
-    { icon: <BookOpen className="h-8 w-8 text-primary" />, value: "500+", label: "Bài học" },
-    { icon: <MessageCircle className="h-8 w-8 text-primary" />, value: "10K+", label: "Học viên" },
-    { icon: <Target className="h-8 w-8 text-primary" />, value: "95%", label: "Tỷ lệ thành công" },
-    { icon: <Zap className="h-8 w-8 text-primary" />, value: "24/7", label: "Hỗ trợ" }
+    { icon: <BookOpen className="h-8 w-8 text-primary" />, value: formatStatValue(statsData.lessonCount), label: "Bài học" },
+    { icon: <Users className="h-8 w-8 text-primary" />, value: formatStatValue(statsData.userCount), label: "Học viên" },
+    { icon: <BookCopy className="h-8 w-8 text-primary" />, value: formatStatValue(statsData.courseCount), label: "Khóa học" },
+    { icon: <Zap className="h-8 w-8 text-primary" />, value: statsData.supportHours, label: "Hỗ trợ" }
   ];
 
   return (
     <section id="features" className="py-20 bg-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Section Header */}
         <motion.div className="text-center mb-16" initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4 }}>
           <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-4">
             Tại sao chọn EnglishMaster?
@@ -75,7 +87,6 @@ export function Features() {
           </p>
         </motion.div>
 
-        {/* Features Grid */}
         <motion.div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 mb-20" initial="hidden" whileInView="show" viewport={{ once: true, margin: "-60px" }} variants={{ hidden: {}, show: { transition: { staggerChildren: 0.06 } } }}>
           {features.map((feature, index) => (
             <motion.div
@@ -97,7 +108,6 @@ export function Features() {
           ))}
         </motion.div>
 
-        {/* Stats Section */}
         <motion.div className="rounded-2xl p-8 lg:p-12 border bg-card" initial={{ opacity: 0, scale: 0.98 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ duration: 0.4 }}>
           <div className="text-center mb-12">
             <h3 className="text-2xl lg:text-3xl font-bold text-foreground mb-4">

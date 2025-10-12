@@ -1,6 +1,5 @@
 import { Header } from "./header";
 import { Hero } from "../../components/hero";
-import { Features } from "../../components/features";
 import { Testimonials } from "../../components/testimonials";
 import { apiClient } from "@/lib/api"; // Import apiClient của bạn
 

@@ -83,6 +83,12 @@ export interface Testimonial {
   authorAvatarUrl?: string;
 }
 
+export interface PlatformStats {
+  lessonCount: number;
+  userCount: number;
+  courseCount: number;
+  supportHours: string;
+}
 
 
 
@@ -202,6 +208,19 @@ class ApiClient {
       console.error("Failed to fetch featured testimonials:", error);
       // Trả về mảng rỗng nếu có lỗi để trang không bị crash
       return [];
+    }
+  }
+
+    async getPlatformStats(): Promise<PlatformStats> {
+    try {
+      const response = await this.axiosInstance.get<ApiResponse<PlatformStats>>(
+        '/api/v1/platform/stats'
+      );
+      return response.data.data!;
+    } catch (error) {
+      console.error("Failed to fetch platform stats:", error);
+      // Trả về giá trị mặc định nếu lỗi để trang không bị crash
+      return { lessonCount: 500, userCount: 10000, successRate: 95, supportHours: '24/7' };
     }
   }
 
