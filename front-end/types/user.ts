@@ -3,25 +3,25 @@ export interface User {
   user_id: number;
   email: string;
   username: string;
-  full_name?: string;
+  fullName?: string;
   name?: string;
   roles?: string[] | null;
   permissions?: Record<string, string[]>;
-  email_verified?: boolean;
+  emailVerified?: boolean;
   status?: string;
   enabled?: boolean;
-  last_login?: string;
-  created_at?: string;
-  updated_at?: string;
-  is_onboarded: boolean;
+  lastLogin?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  isOnboarded: boolean;
   avatar?: string;
   // Profile fields
-  english_level?: string;
-  learning_goals?: string;
-  preferred_accent?: string;
-  daily_study_goal?: number;
-  notification_enabled?: boolean;
-  privacy_level?: string;
+  englishLevel?: string;
+  learningGoals?: string;
+  preferredAccent?: string;
+  dailyStudyGoal?: number;
+  notificationEnabled?: boolean;
+  privacyLevel?: string;
   dob?: string;
   onboarded?: boolean;
 }

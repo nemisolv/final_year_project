@@ -62,7 +62,7 @@ public class UserProfileRepository {
 
 
     public FullInfoProfile getFullProfile(Integer userId) {
-        String sql = "SELECT * FROM user_profiles p JOIN user_roles r ON p.user_id = r.user_id WHERE p.user_id = ?";
+        String sql = "SELECT * FROM user_profiles p JOIN user_roles r ON p.user_id = r.user_id JOIN users u ON u.id = r.user_id WHERE p.user_id = ?";
         List<FullInfoProfile> infos = mariadbJdbcTemplate.query(sql, new Object[]{userId}, (rs, rowNum) -> FullInfoProfile.fromRs(rs));
         return !infos.isEmpty() ? infos.get(0) : null;
     }

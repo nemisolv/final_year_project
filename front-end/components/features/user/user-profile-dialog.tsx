@@ -46,6 +46,7 @@ import {
   Smartphone,
   AlertTriangle
 } from 'lucide-react';
+import { Routes } from '@/config';
 
 interface UserProfileDialogProps {
   user: User;
@@ -60,10 +61,10 @@ type ProfileFormData = {
 };
 
 type LearningFormData = {
-  english_level: string;
-  learning_goals: string;
-  preferred_accent: string;
-  daily_study_goal: number;
+  englishLevel: string;
+  learningGoals: string;
+  preferredAccent: string;
+  dailyStudyGoal: number;
 };
 
 const ENGLISH_LEVELS = [
@@ -106,7 +107,7 @@ export function UserProfileDialog({ user, onUserUpdate, trigger }: UserProfileDi
 
   const profileForm = useForm<ProfileFormData>({
     defaultValues: {
-      name: user.name || user.full_name || '',
+      name: user.name || user.fullName || '',
       username: user.username || '',
       dob: user.dob ? user.dob.split(' ')[0] : '',
     },
@@ -114,17 +115,17 @@ export function UserProfileDialog({ user, onUserUpdate, trigger }: UserProfileDi
 
   const learningForm = useForm<LearningFormData>({
     defaultValues: {
-      english_level: user.english_level || 'BEGINNER',
-      learning_goals: user.learning_goals || 'GENERAL',
-      preferred_accent: user.preferred_accent || 'AMERICAN',
-      daily_study_goal: user.daily_study_goal || 30,
+      englishLevel: user.englishLevel || 'BEGINNER',
+      learningGoals: user.learningGoals || 'GENERAL',
+      preferredAccent: user.preferredAccent || 'AMERICAN',
+      dailyStudyGoal: user.dailyStudyGoal || 30,
     },
   });
 
   const [notificationEnabled, setNotificationEnabled] = useState(
-    user.notification_enabled ?? true
+    user.notificationEnabled ?? true
   );
-  const [privacyLevel, setPrivacyLevel] = useState(user.privacy_level || 'PRIVATE');
+  const [privacyLevel, setPrivacyLevel] = useState(user.privacyLevel || 'PRIVATE');
 
   const handleProfileSubmit = async (data: ProfileFormData) => {
     setIsLoading(true);
@@ -150,10 +151,10 @@ export function UserProfileDialog({ user, onUserUpdate, trigger }: UserProfileDi
     setIsLoading(true);
     try {
       const updatedUser = await userService.updateMyProfile({
-        english_level: data.english_level,
-        learning_goals: data.learning_goals,
-        preferred_accent: data.preferred_accent,
-        daily_study_goal: data.daily_study_goal,
+        englishLevel: data.englishLevel,
+        learningGoals: data.learningGoals,
+        preferredAccent: data.preferredAccent,
+        dailyStudyGoal: data.dailyStudyGoal,
       });
 
       toast.success('Learning settings updated successfully!');
@@ -171,8 +172,8 @@ export function UserProfileDialog({ user, onUserUpdate, trigger }: UserProfileDi
     setIsLoading(true);
     try {
       const updatedUser = await userService.updateMyProfile({
-        notification_enabled: notificationEnabled,
-        privacy_level: privacyLevel,
+        notificationEnabled: notificationEnabled,
+        privacyLevel: privacyLevel,
       });
 
       toast.success('Privacy settings updated successfully!');
@@ -192,7 +193,7 @@ export function UserProfileDialog({ user, onUserUpdate, trigger }: UserProfileDi
       await authService.logoutAllDevices();
       toast.success('Logged out from all devices successfully!');
       setOpen(false);
-      router.push('/auth/login');
+      router.push(Routes.Login);
     } catch (error) {
       console.error('Failed to logout from all devices:', error);
       toast.error('Failed to logout from all devices. Please try again.');
@@ -217,7 +218,7 @@ export function UserProfileDialog({ user, onUserUpdate, trigger }: UserProfileDi
           <DialogTitle className="flex items-center gap-2">
             <UserAvatar user={user} size="lg" />
             <div>
-              <div>{user.full_name || user.username}</div>
+              <div>{user.fullName || user.username}</div>
               <p className="text-sm text-muted-foreground font-normal">{user.email}</p>
             </div>
           </DialogTitle>
@@ -252,7 +253,7 @@ export function UserProfileDialog({ user, onUserUpdate, trigger }: UserProfileDi
                 <CardContent className="space-y-3">
                   <div>
                     <p className="text-sm text-muted-foreground">Full Name</p>
-                    <p className="font-medium">{user.name || user.full_name || 'Not set'}</p>
+                    <p className="font-medium">{user.name || user.fullName || 'Not set'}</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Username</p>
@@ -286,7 +287,7 @@ export function UserProfileDialog({ user, onUserUpdate, trigger }: UserProfileDi
                   <div>
                     <p className="text-sm text-muted-foreground">English Level</p>
                     <Badge variant="secondary">
-                      {ENGLISH_LEVELS.find(l => l.value === user.english_level)?.label || 'Not set'}
+                      {ENGLISH_LEVELS.find(l => l.value === user.englishLevel)?.label || 'Not set'}
                     </Badge>
                   </div>
                   <div>
@@ -295,7 +296,7 @@ export function UserProfileDialog({ user, onUserUpdate, trigger }: UserProfileDi
                       Learning Goal
                     </p>
                     <Badge variant="outline">
-                      {LEARNING_GOALS.find(g => g.value === user.learning_goals)?.label || 'Not set'}
+                      {LEARNING_GOALS.find(g => g.value === user.learningGoals)?.label || 'Not set'}
                     </Badge>
                   </div>
                   <div>
@@ -304,12 +305,12 @@ export function UserProfileDialog({ user, onUserUpdate, trigger }: UserProfileDi
                       Preferred Accent
                     </p>
                     <p className="font-medium">
-                      {ACCENTS.find(a => a.value === user.preferred_accent)?.label || 'Not set'}
+                      {ACCENTS.find(a => a.value === user.preferredAccent)?.label || 'Not set'}
                     </p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Daily Study Goal</p>
-                    <p className="font-medium">{user.daily_study_goal || 30} minutes</p>
+                    <p className="font-medium">{user.dailyStudyGoal} minutes</p>
                   </div>
                 </CardContent>
               </Card>
@@ -325,19 +326,19 @@ export function UserProfileDialog({ user, onUserUpdate, trigger }: UserProfileDi
               <CardContent className="space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-sm">Email Verified</span>
-                  <Badge variant={user.email_verified ? 'default' : 'destructive'}>
-                    {user.email_verified ? 'Verified' : 'Not Verified'}
+                  <Badge variant={user.emailVerified ? 'default' : 'destructive'}>
+                    {user.emailVerified ? 'Verified' : 'Not Verified'}
                   </Badge>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm">Onboarded</span>
-                  <Badge variant={user.is_onboarded ? 'default' : 'secondary'}>
-                    {user.is_onboarded ? 'Completed' : 'Pending'}
+                  <Badge variant={user.isOnboarded ? 'default' : 'secondary'}>
+                    {user.isOnboarded ? 'Completed' : 'Pending'}
                   </Badge>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm">Member Since</span>
-                  <span className="text-sm font-medium">{formatDate(user.created_at || '')}</span>
+                  <span className="text-sm font-medium">{formatDate(user.createdAt || '')}</span>
                 </div>
               </CardContent>
             </Card>
@@ -397,8 +398,8 @@ export function UserProfileDialog({ user, onUserUpdate, trigger }: UserProfileDi
                   <div className="space-y-2">
                     <Label htmlFor="english_level">English Level</Label>
                     <Select
-                      defaultValue={learningForm.getValues('english_level')}
-                      onValueChange={(value) => learningForm.setValue('english_level', value)}
+                      defaultValue={learningForm.getValues('englishLevel')}
+                      onValueChange={(value) => learningForm.setValue('englishLevel', value)}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select your level" />
@@ -416,8 +417,8 @@ export function UserProfileDialog({ user, onUserUpdate, trigger }: UserProfileDi
                   <div className="space-y-2">
                     <Label htmlFor="learning_goals">Learning Goal</Label>
                     <Select
-                      defaultValue={learningForm.getValues('learning_goals')}
-                      onValueChange={(value) => learningForm.setValue('learning_goals', value)}
+                      defaultValue={learningForm.getValues('learningGoals')}
+                      onValueChange={(value) => learningForm.setValue('learningGoals', value)}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select your goal" />
@@ -435,8 +436,8 @@ export function UserProfileDialog({ user, onUserUpdate, trigger }: UserProfileDi
                   <div className="space-y-2">
                     <Label htmlFor="preferred_accent">Preferred Accent</Label>
                     <Select
-                      defaultValue={learningForm.getValues('preferred_accent')}
-                      onValueChange={(value) => learningForm.setValue('preferred_accent', value)}
+                      defaultValue={learningForm.getValues('preferredAccent')}
+                      onValueChange={(value) => learningForm.setValue('preferredAccent', value)}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select accent" />
@@ -459,7 +460,7 @@ export function UserProfileDialog({ user, onUserUpdate, trigger }: UserProfileDi
                       min="5"
                       max="300"
                       step="5"
-                      {...learningForm.register('daily_study_goal', {
+                      {...learningForm.register('dailyStudyGoal', {
                         valueAsNumber: true,
                         required: true,
                       })}

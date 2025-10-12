@@ -15,7 +15,6 @@ export default async function Home() {
       <Header />
       <Hero />
       <Features statsData={platformStats} /> {/* Sử dụng Features và truyền props */}
-      {/* Truyền dữ liệu đã fetch được xuống component Testimonials */}
       <Testimonials testimonials={testimonials} />
     </main>
   );

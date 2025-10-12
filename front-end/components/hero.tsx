@@ -1,7 +1,6 @@
 "use client";
 
-import Image from "next/image";
-import { Play, ArrowRight, Star, Users, BookOpen } from "lucide-react";
+import { Play, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { InteractiveQuizCard } from "@/components/marketing/interactive-quiz-card";
 import { Routes } from "@/config";
@@ -83,65 +82,10 @@ export function Hero() {
                   <ArrowRight className="h-5 w-5" />
                 </motion.button>
               </a>
-              {/* <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="border border-border text-foreground px-7 py-3 rounded-lg text-base lg:text-lg font-semibold hover:bg-accent transition-all duration-200 flex items-center justify-center gap-2"
-              >
-                <Play className="h-5 w-5" />
-                <span>Xem demo</span>
-              </motion.button> */}
             </motion.div>
 
             {/* Stats */}
-            <motion.div
-              className="grid grid-cols-3 gap-8 pt-10"
-              variants={{
-                hidden: {},
-                show: { transition: { staggerChildren: 0.06 } },
-              }}
-            >
-              <motion.div
-                className="text-center"
-                variants={{
-                  hidden: { opacity: 0, y: 8 },
-                  show: { opacity: 1, y: 0 },
-                }}
-              >
-                <div className="flex items-center justify-center space-x-1 text-yellow-500 mb-2">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="h-4 w-4 fill-current" />
-                  ))}
-                </div>
-                <p className="text-sm text-muted-foreground">4.9/5 đánh giá</p>
-              </motion.div>
-              <motion.div
-                className="text-center"
-                variants={{
-                  hidden: { opacity: 0, y: 8 },
-                  show: { opacity: 1, y: 0 },
-                }}
-              >
-                <div className="flex items-center justify-center space-x-2 text-primary mb-2">
-                  <Users className="h-5 w-5" />
-                  <span className="text-2xl font-bold">10K+</span>
-                </div>
-                <p className="text-sm text-muted-foreground">Học viên</p>
-              </motion.div>
-              <motion.div
-                className="text-center"
-                variants={{
-                  hidden: { opacity: 0, y: 8 },
-                  show: { opacity: 1, y: 0 },
-                }}
-              >
-                <div className="flex items-center justify-center space-x-2 text-green-600 mb-2">
-                  <BookOpen className="h-5 w-5" />
-                  <span className="text-2xl font-bold">500+</span>
-                </div>
-                <p className="text-sm text-muted-foreground">Bài học</p>
-              </motion.div>
-            </motion.div>
+           
           </motion.div>
 
           {/* Right Column - Visual */}

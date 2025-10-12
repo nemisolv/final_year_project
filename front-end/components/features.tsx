@@ -8,7 +8,6 @@ import {
   Clock,
   Smartphone,
   BookOpen,
-  MessageCircle,
   Zap,
   BookCopy
 } from "lucide-react";
@@ -71,7 +70,7 @@ export function Features({ statsData }: { statsData: PlatformStats }) {
     { icon: <BookOpen className="h-8 w-8 text-primary" />, value: formatStatValue(statsData.lessonCount), label: "Bài học" },
     { icon: <Users className="h-8 w-8 text-primary" />, value: formatStatValue(statsData.userCount), label: "Học viên" },
     { icon: <BookCopy className="h-8 w-8 text-primary" />, value: formatStatValue(statsData.courseCount), label: "Khóa học" },
-    { icon: <Zap className="h-8 w-8 text-primary" />, value: statsData.supportHours, label: "Hỗ trợ" }
+    { icon: <Zap className="h-8 w-8 text-primary" />, value: '24/7', label: "Hỗ trợ" }
   ];
 
   return (

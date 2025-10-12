@@ -121,28 +121,7 @@ export function Testimonials({ testimonials }: TestimonialsProps) {
           ))}
         </motion.div>
 
-        {/* CTA Section */}
-        <div className="text-center mt-16">
-          <motion.div className="rounded-2xl p-8 lg:p-12 border bg-card/50 backdrop-blur" initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-            <h3 className="text-2xl lg:text-3xl font-bold text-foreground mb-4">
-              Sẵn sàng bắt đầu hành trình học tiếng Anh?
-            </h3>
-            <p className="text-muted-foreground text-lg mb-8 max-w-2xl mx-auto">
-              Tham gia cùng hàng nghìn học viên đã thành công với EnglishMaster. 
-              Miễn phí 7 ngày đầu tiên!
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <a href="/auth/signup" className="inline-flex">
-                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="bg-primary text-primary-foreground px-7 py-3 rounded-lg text-base lg:text-lg font-semibold transition-colors duration-200 shadow">
-                  Bắt đầu miễn phí ngay
-                </motion.button>
-              </a>
-              <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="border border-border text-foreground px-7 py-3 rounded-lg text-base lg:text-lg font-semibold hover:bg-accent transition-colors duration-200">
-                Xem demo
-              </motion.button>
-            </div>
-          </motion.div>
-        </div>
+        
       </div>
     </section>
   );

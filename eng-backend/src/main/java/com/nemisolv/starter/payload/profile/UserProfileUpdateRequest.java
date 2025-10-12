@@ -8,7 +8,6 @@ import jakarta.validation.constraints.Size;
 
 import java.time.LocalDate;
 
-@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public record UserProfileUpdateRequest(
         @Size(max = 100, message = "Name must not exceed 100 characters")
         String name,

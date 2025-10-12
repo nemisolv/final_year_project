@@ -143,25 +143,25 @@ export default function DashboardPage() {
   ] : [
     {
       label: "Study Streak",
-      value: `${dashboardStats.current_streak_days} ${dashboardStats.current_streak_days === 1 ? 'day' : 'days'}`,
+      value: `${dashboardStats.currentStreakDays} ${dashboardStats.currentStreakDays === 1 ? 'day' : 'days'}`,
       icon: TrendingUp,
       color: "text-green-500",
     },
     {
       label: "Daily Goal",
-      value: `${dashboardStats.daily_study_goal_minutes} min`,
+      value: `${dashboardStats.dailyStudyGoalMinutes} min`,
       icon: Target,
       color: "text-blue-500",
     },
     {
       label: "Time Today",
-      value: `${dashboardStats.minutes_studied_today} min`,
+      value: `${dashboardStats.minutesStudiedToday} min`,
       icon: Clock,
       color: "text-purple-500",
     },
     {
       label: "Total Points",
-      value: dashboardStats.total_xp.toString(),
+      value: dashboardStats.totalXp.toString(),
       icon: Award,
       color: "text-orange-500",
     },
@@ -182,7 +182,7 @@ export default function DashboardPage() {
         {/* Welcome Section */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-2">
-            Welcome back, {user?.username || user?.full_name || "Learner"}! 👋
+            Welcome back, {user?.username || user?.fullName || "Learner"}! 👋
           </h1>
           <p className="text-muted-foreground text-lg">
             Ready to continue your English learning journey?

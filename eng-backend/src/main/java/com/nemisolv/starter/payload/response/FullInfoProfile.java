@@ -18,6 +18,7 @@ public class FullInfoProfile {
     private Integer userId;
     private String email;
     private String username;
+    private boolean emailVerified;
     private List<String> roles;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private boolean isOnboarded;
@@ -29,12 +30,15 @@ public class FullInfoProfile {
     private String privacyLevel;
     private String name;
     private LocalDateTime dob;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
     public static FullInfoProfile fromRs(ResultSet rs) throws SQLException {
         return FullInfoProfile.builder()
                 .id(rs.getInt("id"))
                 .userId(rs.getInt("user_id"))
                 .email(rs.getString("email"))
+                .emailVerified(rs.getBoolean("email_verified"))
                 .username(rs.getString("username"))
                 .englishLevel(rs.getString("english_level"))
                 .learningGoals(rs.getString("learning_goals"))
@@ -45,6 +49,8 @@ public class FullInfoProfile {
                 .privacyLevel(rs.getString("privacy_level"))
                 .name(rs.getString("name"))
                 .dob(rs.getTimestamp("dob") != null ? rs.getTimestamp("dob").toLocalDateTime() : null)
+                .createdAt(rs.getTimestamp("created_at") != null ? rs.getTimestamp("created_at").toLocalDateTime() : null)
+                .updatedAt(rs.getTimestamp("updated_at") !=  null ? rs.getTimestamp("updated_at").toLocalDateTime() : null)
 //                .lastLogin(rs.getTimestamp("last_login_at") != null ? rs.getTimestamp("last_login_at").toLocalDateTime() : null)
                 .build();
     }
