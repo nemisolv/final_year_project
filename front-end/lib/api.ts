@@ -220,7 +220,7 @@ class ApiClient {
     } catch (error) {
       console.error("Failed to fetch platform stats:", error);
       // Trả về giá trị mặc định nếu lỗi để trang không bị crash
-      return { lessonCount: 500, userCount: 10000, successRate: 95, supportHours: '24/7' };
+      return { lessonCount: 500, userCount: 10000, courseCount: 95, supportHours: '24/7' };
     }
   }
 

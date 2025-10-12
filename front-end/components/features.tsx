@@ -1,11 +1,11 @@
 "use client";
 
-import { 
-  Brain, 
-  Headphones, 
-  Users, 
-  Trophy, 
-  Clock, 
+import {
+  Brain,
+  Headphones,
+  Users,
+  Trophy,
+  Clock,
   Smartphone,
   BookOpen,
   MessageCircle,
@@ -26,8 +26,8 @@ const formatStatValue = (value: number) => {
   return `${value}+`;
 };
 
-// Đây là Client Component, chỉ chịu trách nhiệm render UI và animation
- function FeaturesContent({ statsData }: { statsData: PlatformStats }) {
+// Đổi tên và export component
+export function Features({ statsData }: { statsData: PlatformStats }) {
   const features = [
     {
       icon: <Brain className="h-6 w-6" />,
@@ -82,7 +82,7 @@ const formatStatValue = (value: number) => {
             Tại sao chọn EnglishMaster?
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Chúng tôi kết hợp công nghệ AI tiên tiến với phương pháp học tập hiệu quả 
+            Chúng tôi kết hợp công nghệ AI tiên tiến với phương pháp học tập hiệu quả
             để mang đến trải nghiệm học tiếng Anh tốt nhất.
           </p>
         </motion.div>
