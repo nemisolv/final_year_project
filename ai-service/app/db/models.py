@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, BigInteger, String, Text, DateTime, Decimal, Enum, ForeignKey, JSON, Boolean
+from sqlalchemy import Column, Integer, BigInteger, String, Text, DateTime, Enum, ForeignKey, JSON, Boolean, Numeric
 from sqlalchemy.sql import func
 from app.db.database import Base
 import enum
@@ -27,7 +27,7 @@ class DialogueSession(Base):
     scenario_id = Column(BigInteger, ForeignKey("dialogue_scenarios.id"), nullable=False)
     session_data = Column(JSON)
     current_state = Column(String(100))
-    score = Column(Decimal(5, 2))
+    score = Column(Numeric(5, 2))
     turns_count = Column(Integer, default=0)
     successful_turns = Column(Integer, default=0)
     status = Column(Enum(SessionStatus), default=SessionStatus.ACTIVE)
@@ -49,9 +49,9 @@ class DialogueTurn(Base):
     ai_audio_path = Column(String(255))
     intent_detected = Column(String(100))
     entities_extracted = Column(JSON)
-    confidence_score = Column(Decimal(5, 4))
+    confidence_score = Column(Numeric(5, 4))
     grammar_errors = Column(JSON)
-    pronunciation_score = Column(Decimal(5, 2))
+    pronunciation_score = Column(Numeric(5, 2))
     is_successful = Column(Boolean)
     feedback = Column(Text)
     created_at = Column(DateTime, default=func.now())
@@ -68,7 +68,7 @@ class GrammarAnalysis(Base):
     corrected_text = Column(Text)
     errors_detected = Column(JSON)
     suggestions = Column(JSON)
-    confidence_score = Column(Decimal(5, 4))
+    confidence_score = Column(Numeric(5, 4))
     analysis_method = Column(Enum(AnalysisMethod), default=AnalysisMethod.LLM)
     processing_time_ms = Column(Integer)
     created_at = Column(DateTime, default=func.now(), index=True)
@@ -85,8 +85,8 @@ class PronunciationAnalysis(Base):
     recognized_text = Column(Text)
     audio_file_path = Column(String(255))
     word_scores = Column(JSON)
-    overall_score = Column(Decimal(5, 2), index=True)
-    word_error_rate = Column(Decimal(5, 4))
+    overall_score = Column(Numeric(5, 2), index=True)
+    word_error_rate = Column(Numeric(5, 4))
     feedback = Column(JSON)
     analysis_method = Column(Enum(AnalysisMethod), default=AnalysisMethod.WHISPER)
     processing_time_ms = Column(Integer)

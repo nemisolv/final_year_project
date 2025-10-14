@@ -61,21 +61,16 @@ class GrammarCheckRequest(BaseModel):
 
 
 class GrammarError(BaseModel):
-    message: str
-    short_message: str
     offset: int
-    length: int
-    rule_id: str
-    category: str
-    replacements: List[str] = []
-    context: str
+    errorLength: int
+    message: str
+    suggestions: List[str] = []
 
 
 class GrammarCheckResponse(BaseModel):
+    originalText: str
+    correctedText: str
     errors: List[GrammarError]
-    corrected_text: str
-    error_count: int
-    suggestions: List[str] = []
 
 
 # Pronunciation Analysis

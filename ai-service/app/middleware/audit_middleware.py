@@ -1,3 +1,4 @@
+from typing import Optional
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 from app.db.database import SessionLocal
@@ -211,6 +212,3 @@ class AuditLoggingMiddleware(BaseHTTPMiddleware):
         """
         import traceback
         return traceback.format_exc()
-
-
-from typing import Optional

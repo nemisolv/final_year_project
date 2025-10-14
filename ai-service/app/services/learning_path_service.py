@@ -1,4 +1,4 @@
-from openai import OpenAI
+from anthropic import Anthropic
 from app.config import settings
 from app.models import LearningPathRequest, LearningPathResponse, LearningActivity, DifficultyLevel
 import logging
@@ -10,8 +10,8 @@ logger = logging.getLogger(__name__)
 
 class LearningPathService:
     def __init__(self):
-        self.client = OpenAI(api_key=settings.OPENAI_API_KEY)
-        self.model = settings.OPENAI_MODEL
+        self.client = Anthropic(api_key=settings.ANTHROPIC_API_KEY)
+        self.model = settings.CLAUDE_MODEL
 
     async def generate_learning_path(self, request: LearningPathRequest) -> LearningPathResponse:
         """
@@ -51,17 +51,17 @@ Guidelines:
 
 Respond with valid JSON only."""
 
-            response = self.client.chat.completions.create(
+            response = self.client.messages.create(
                 model=self.model,
-                messages=[
-                    {"role": "system", "content": "You are an expert curriculum designer for English language learning. Always respond with valid JSON only."},
-                    {"role": "user", "content": prompt}
-                ],
-                temperature=0.7,
                 max_tokens=1500,
+                temperature=0.7,
+                system="You are an expert curriculum designer for English language learning. Always respond with valid JSON only.",
+                messages=[
+                    {"role": "user", "content": prompt}
+                ]
             )
 
-            result = response.choices[0].message.content
+            result = response.content[0].text
 
             # Parse JSON
             try:

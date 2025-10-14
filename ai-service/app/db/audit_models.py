@@ -72,7 +72,7 @@ class AIServiceAuditLog(Base):
     error_stack_trace = Column(Text, nullable=True)
 
     # Metadata
-    metadata = Column(JSON, nullable=True)  # Additional context
+    extra_metadata = Column(JSON, nullable=True)  # Additional context
     tags = Column(JSON, nullable=True)  # For categorization
 
     # Timestamps

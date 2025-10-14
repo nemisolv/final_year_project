@@ -15,11 +15,11 @@ class Settings(BaseSettings):
     HOST: str = "0.0.0.0"
     PORT: int = 8000
 
-    # OpenAI settings
-    OPENAI_API_KEY: str
-    OPENAI_MODEL: str = "gpt-4o-mini"
-    OPENAI_MAX_TOKENS: int = 1000
-    OPENAI_TEMPERATURE: float = 0.7
+    # Claude API settings
+    ANTHROPIC_API_KEY: str
+    CLAUDE_MODEL: str = "claude-3-5-sonnet-20241022"
+    CLAUDE_MAX_TOKENS: int = 1000
+    CLAUDE_TEMPERATURE: float = 0.7
 
     # Backend integration
     BACKEND_URL: str = "http://localhost:8092"

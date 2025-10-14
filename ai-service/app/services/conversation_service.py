@@ -1,4 +1,4 @@
-from openai import OpenAI
+from anthropic import Anthropic
 from app.config import settings
 from app.models import ConversationRequest, ConversationResponse, Message
 from app.services.nlu_service import nlu_service
@@ -10,8 +10,8 @@ logger = logging.getLogger(__name__)
 
 class ConversationService:
     def __init__(self):
-        self.client = OpenAI(api_key=settings.OPENAI_API_KEY)
-        self.model = settings.OPENAI_MODEL
+        self.client = Anthropic(api_key=settings.ANTHROPIC_API_KEY)
+        self.model = settings.CLAUDE_MODEL
         self.nlu = nlu_service
 
         # Scenario templates
@@ -78,8 +78,8 @@ Your responsibilities:
 
 Provide brief, natural responses (2-4 sentences). Don't break character."""
 
-            # Build message history
-            messages = [{"role": "system", "content": system_prompt}]
+            # Build message history (Claude uses separate system parameter)
+            messages = []
 
             # Add conversation history
             for msg in request.conversation_history:
@@ -94,15 +94,16 @@ Provide brief, natural responses (2-4 sentences). Don't break character."""
                 "content": request.user_message
             })
 
-            # Call OpenAI
-            response = self.client.chat.completions.create(
+            # Call Claude API
+            response = self.client.messages.create(
                 model=self.model,
-                messages=messages,
                 max_tokens=500,
                 temperature=0.8,
+                system=system_prompt,
+                messages=messages
             )
 
-            ai_message = response.choices[0].message.content
+            ai_message = response.content[0].text
 
             # Analyze user's message for corrections (simple version)
             corrections = await self._analyze_for_corrections(request.user_message)

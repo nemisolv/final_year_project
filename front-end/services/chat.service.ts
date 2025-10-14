@@ -1,56 +1,73 @@
 import { getAccessToken } from '@/lib/auth';
 
-
-// Định nghĩa kiểu dữ liệu cho tin nhắn
-interface ChatMessage {
+// Chat message interface
+export interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
 }
 
-// Định nghĩa kiểu dữ liệu cho request
-interface ChatRequest {
+// Chat request interface
+export interface ChatRequest {
   messages: ChatMessage[];
 }
 
-// Định nghĩa kiểu dữ liệu cho response
-interface ChatResponse {
-  message: ChatMessage;
-}
+// Chat service class
+class ChatService {
+    private readonly baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-
-// ... (các interface ChatMessage, ChatRequest, ChatResponse không đổi)
-
-class AIService {
-    // ... (hàm chat cũ không đổi)
-
-    // Hàm mới để xử lý stream
-    async chatStream(request: ChatRequest, onChunk: (chunk: string) => void) {
+    /**
+     * Stream chat response using SSE (Server-Sent Events)
+     * @param request Chat request with message history
+     * @param onChunk Callback for each chunk received
+     * @param onError Callback for errors
+     * @param onComplete Callback when stream completes
+     */
+    async chatStream(
+        request: ChatRequest,
+        onChunk: (chunk: string) => void,
+        onError?: (error: Error) => void,
+        onComplete?: () => void
+    ): Promise<void> {
         const token = getAccessToken();
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/learning/chat-stream`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`,
-            },
-            body: JSON.stringify(request),
-        });
 
-        if (!response.body) {
-            throw new Error("Response body is null");
-        }
+        try {
+            const response = await fetch(`${this.baseUrl}/learning/chat-stream`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify(request),
+            });
 
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) {
-                break;
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
-            const chunk = decoder.decode(value);
-            onChunk(chunk);
+
+            if (!response.body) {
+                throw new Error("Response body is null");
+            }
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+
+            while (true) {
+                const { done, value } = await reader.read();
+
+                if (done) {
+                    onComplete?.();
+                    break;
+                }
+
+                const chunk = decoder.decode(value, { stream: true });
+                onChunk(chunk);
+            }
+        } catch (error) {
+            const err = error instanceof Error ? error : new Error('Unknown error occurred');
+            console.error('Chat stream error:', err);
+            onError?.(err);
         }
     }
 }
 
-export const aiService = new AIService();
+export const chatService = new ChatService();

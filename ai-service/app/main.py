@@ -49,7 +49,7 @@ async def health_check():
         timestamp=datetime.now(),
         version=settings.API_VERSION,
         services={
-            "openai": "connected" if settings.OPENAI_API_KEY else "not_configured",
+            "claude": "connected" if settings.ANTHROPIC_API_KEY else "not_configured",
             "backend": "configured" if settings.BACKEND_URL else "not_configured",
         }
     )
@@ -95,7 +95,7 @@ async def global_exception_handler(request, exc):
 @app.on_event("startup")
 async def startup_event():
     logger.info(f"{settings.APP_NAME} started successfully")
-    logger.info(f"OpenAI configured: {bool(settings.OPENAI_API_KEY)}")
+    logger.info(f"Claude API configured: {bool(settings.ANTHROPIC_API_KEY)}")
     logger.info(f"Backend URL: {settings.BACKEND_URL}")
 
 

@@ -24,7 +24,7 @@ public class ChatController {
     private final ChatMessageService chatMessageService;
     private final ChatAIService chatAIService;
 
-    @PostMapping(value = "/chat-stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @PostMapping(value = "/learning/chat-stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     @PreAuthorize("isAuthenticated()")
     public Flux<String> handleChatStream(@Valid @RequestBody ChatRequest chatRequest, @AuthenticationPrincipal UserPrincipal currentUser) {
 
@@ -38,10 +38,18 @@ public class ChatController {
         Flux<String> aiStream = chatAIService.getChatStream(chatRequest);
 
         // 3. Hậu xử lý: Thu thập kết quả stream và lưu câu trả lời của AI
-        return aiStream.collect(Collectors.joining())
-                .doOnSuccess(fullResponse -> {
+        // Sử dụng cache() để có thể subscribe nhiều lần
+        Flux<String> cachedStream = aiStream.cache();
+
+        // Subscribe để lưu full response (không block stream)
+        cachedStream.collect(Collectors.joining())
+                .subscribe(fullResponse -> {
                     chatMessageService.saveAssistantMessage(fullResponse, currentUser);
-                })
-                .flatMapMany(fullResponse -> aiStream); // Trả về stream gốc cho client
+                }, error -> {
+                    log.error("Error saving assistant message", error);
+                });
+
+        // 4. Trả về stream cho client
+        return cachedStream;
     }
 }
