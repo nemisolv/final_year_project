@@ -1,22 +1,36 @@
 'use client';
 
-import { BookOpen, LogOut, Settings, User as UserIcon } from 'lucide-react';
+import { BookOpen, User as UserIcon } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/use-auth';
-import { UserAvatar } from '@/components/ui/user-avatar';
-import { Button } from '@/components/ui/button';
 import { UserProfileDialog } from '@/components/features/user/user-profile-dialog';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { UserDropdown } from '@/components/features/user';
+import { USER_MENU_PRESETS } from '@/config/user-menu.config';
+import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 
 export function DashboardHeader() {
-  const { user, logout, setUser } = useAuth();
+  const { user, setUser } = useAuth();
+
+  // Custom menu items with UserProfileDialog integration
+  const customMenuItems = user ? [
+    {
+      label: 'My Profile',
+      icon: UserIcon,
+      customContent: (
+        <UserProfileDialog
+          user={user}
+          onUserUpdate={(updatedUser) => setUser(updatedUser)}
+          trigger={
+            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+              <UserIcon className="mr-2 h-4 w-4" />
+              My Profile
+            </DropdownMenuItem>
+          }
+        />
+      ),
+    },
+    { label: 'separator' },
+  ] : [];
 
   return (
     <header className="sticky top-0 z-50 bg-background/80 backdrop-blur border-b">
@@ -45,57 +59,9 @@ export function DashboardHeader() {
 
           {/* User Menu */}
           <div className="flex items-center space-x-4">
-            {user && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-                    <UserAvatar user={user} size="md" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56" align="end" forceMount>
-                  <DropdownMenuLabel className="font-normal">
-                    <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium leading-none">{user.full_name || user.username}</p>
-                      <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
-                    </div>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <UserProfileDialog
-                    user={user}
-                    onUserUpdate={(updatedUser) => setUser(updatedUser)}
-                    trigger={
-                      <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                        <UserIcon className="mr-2 h-4 w-4" />
-                        My Profile
-                      </DropdownMenuItem>
-                    }
-                  />
-                  <DropdownMenuItem asChild>
-                    <Link href="/dashboard" className="cursor-pointer">
-                      <BookOpen className="mr-2 h-4 w-4" />
-                      Dashboard
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/learning/path" className="cursor-pointer">
-                      <BookOpen className="mr-2 h-4 w-4" />
-                      Learning Path
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/settings" className="cursor-pointer">
-                      <Settings className="mr-2 h-4 w-4" />
-                      Settings
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={logout} className="text-red-600 cursor-pointer">
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Logout
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
+            <UserDropdown
+              menuItems={[...customMenuItems, ...USER_MENU_PRESETS.dashboard]}
+            />
           </div>
         </div>
       </div>

@@ -143,10 +143,56 @@ public class RoleRepository {
             return false;
         }
     }
-    
-    /**
-     * Map ResultSet row to Role object
-     */
+
+    public boolean existsById(Long id) {
+        String sql = "SELECT COUNT(*) FROM roles WHERE id = ?";
+        try {
+            Integer count = mariadbJdbcTemplate.queryForObject(sql, Integer.class, id);
+            return count != null && count > 0;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public Set<Role> findByIdIn(Set<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return new HashSet<>();
+        }
+        String sql = "SELECT * FROM roles WHERE id IN (:ids)";
+        try {
+            Map<String, Object> params = new HashMap<>();
+            params.put("ids", ids);
+            List<Role> roles = namedParameterJdbcTemplate.query(sql, params, this::mapRowToRole);
+            return new HashSet<>(roles);
+        } catch (Exception e) {
+            log.error("Error finding roles by IDs: {}", e.getMessage());
+            return new HashSet<>();
+        }
+    }
+
+    public Long countUsersByRoleId(Long roleId) {
+        String sql = "SELECT COUNT(*) FROM user_roles WHERE role_id = ?";
+        try {
+            Long count = mariadbJdbcTemplate.queryForObject(sql, Long.class, roleId);
+            return count != null ? count : 0L;
+        } catch (Exception e) {
+            return 0L;
+        }
+    }
+
+    public org.springframework.data.domain.Page<Role> findAll(org.springframework.data.domain.Pageable pageable) {
+        String countSql = "SELECT COUNT(*) FROM roles";
+        Long total = mariadbJdbcTemplate.queryForObject(countSql, Long.class);
+        total = total != null ? total : 0;
+
+        String sql = "SELECT * FROM roles ORDER BY name LIMIT ? OFFSET ?";
+        int offset = pageable.getPageNumber() * pageable.getPageSize();
+        List<Role> roles = mariadbJdbcTemplate.query(sql, this::mapRowToRole,
+                pageable.getPageSize(), offset);
+
+        return new org.springframework.data.domain.PageImpl<>(roles, pageable, total);
+    }
+
     private Role mapRowToRole(ResultSet rs, int rowNum) throws SQLException {
         Role role = new Role();
         role.setId(rs.getLong("id"));

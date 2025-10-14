@@ -23,6 +23,8 @@ export const apiConfig = {
     },
     admin: {
       users: '/admin/users',
+      roles: '/admin/roles',
+      permissions: '/admin/permissions',
       content: '/admin/content',
       scenarios: '/admin/scenarios',
     },

@@ -20,5 +20,5 @@ public class AuthenticationResponse {
      * Map of role names to their associated permission names
      * Example: {"ADMIN": ["USER_CREATE", "USER_READ", ...], "TEACHER": ["LESSON_CREATE", ...]}
      */
-    private Map<String, List<String>> roles;
+    private Map<String, List<String>> scopes;
 }

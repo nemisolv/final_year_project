@@ -9,12 +9,14 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AuthLayout } from '@/components/auth/auth-layout';
 import { AUTH } from '@/lib/constants';
-import { apiClient } from '@/lib/api';
+import { useAuth } from '@/hooks';
+import { getLoginRedirectPath } from '@/lib/auth/redirect';
 import { Eye, EyeOff, Mail, Lock, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function LoginPage() {
   const router = useRouter();
+  const { login: authLogin, user } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -54,27 +56,14 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      // Call backend API to login
-      const response = await apiClient.login(formData.email, formData.password);
+      // Use authLogin from useAuth() - this will update the AuthProvider state and return user data
+      const loggedInUser = await authLogin(formData.email, formData.password);
 
-      // Get current user info
-      const user = await apiClient.getCurrentUser();
+      // Get appropriate redirect path based on user data
+      const redirectPath = getLoginRedirectPath(loggedInUser);
 
-      toast.success(AUTH.messages.success.login);
-
-      // Check onboarding status first (handle both field names for compatibility)
-      const isOnboarded = user.is_onboarded ?? (user as any).onboarded ?? true;
-      if (!isOnboarded) {
-        router.push('/onboarding');
-        return;
-      }
-
-      // Redirect based on user role
-      if (user.roles && user.roles.includes('ADMIN')) {
-        router.push('/admin');
-      } else {
-        router.push('/dashboard');
-      }
+      // Redirect to appropriate page
+      router.push(redirectPath);
     } catch (error) {
       console.error('Login error:', error);
       const errorMessage = (error as { response?: { data?: { message?: string } } }).response?.data?.message || AUTH.messages.error.login;

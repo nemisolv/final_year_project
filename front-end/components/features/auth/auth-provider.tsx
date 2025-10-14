@@ -75,12 +75,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [fetchUser]);
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string): Promise<User> => {
     try {
       await authService.login({ email, password });
       // Force fetch to get fresh user data and update state
-      await fetchUser(true);
+      const userData = await fetchUser(true);
+
+      if (!userData) {
+        throw new Error('Failed to fetch user data after login');
+      }
+
       toast.success('Đăng nhập thành công!');
+      return userData;
     } catch (error) {
       const err = error as { message?: string };
       toast.error(err.message || 'Đăng nhập thất bại');

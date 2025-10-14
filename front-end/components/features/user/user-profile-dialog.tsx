@@ -107,7 +107,7 @@ export function UserProfileDialog({ user, onUserUpdate, trigger }: UserProfileDi
 
   const profileForm = useForm<ProfileFormData>({
     defaultValues: {
-      name: user.name || user.fullName || '',
+      name: user.name || '',
       username: user.username || '',
       dob: user.dob ? user.dob.split(' ')[0] : '',
     },
@@ -218,7 +218,7 @@ export function UserProfileDialog({ user, onUserUpdate, trigger }: UserProfileDi
           <DialogTitle className="flex items-center gap-2">
             <UserAvatar user={user} size="lg" />
             <div>
-              <div>{user.fullName || user.username}</div>
+              <div>{user.name}</div>
               <p className="text-sm text-muted-foreground font-normal">{user.email}</p>
             </div>
           </DialogTitle>
@@ -253,7 +253,7 @@ export function UserProfileDialog({ user, onUserUpdate, trigger }: UserProfileDi
                 <CardContent className="space-y-3">
                   <div>
                     <p className="text-sm text-muted-foreground">Full Name</p>
-                    <p className="font-medium">{user.name || user.fullName || 'Not set'}</p>
+                    <p className="font-medium">{user.name}</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Username</p>

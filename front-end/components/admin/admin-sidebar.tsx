@@ -3,13 +3,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, Users, BookOpen, Settings, MessageSquare, PieChart, Star, FileText } from "lucide-react";
+import { BarChart3, Users, BookOpen, Settings, MessageSquare, PieChart, Star, FileText, Shield, Key } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/common/logo";
 
 const adminRoutes = [
   { href: "/admin", label: "Tổng quan", icon: BarChart3 },
-  { href: "/admin/users", label: "Người dùng", icon: Users },
+  { href: "/admin/users", label: "Quản lý người dùng", icon: Users },
+  { href: "/admin/roles", label: "Quản lý vai trò", icon: Shield },
+  { href: "/admin/permissions", label: "Quản lý quyền", icon: Key },
   { href: "/admin/courses", label: "Khóa học", icon: BookOpen },
   { href: "/admin/content", label: "Nội dung", icon: FileText },
   { href: "/admin/scenarios", label: "Kịch bản", icon: MessageSquare },

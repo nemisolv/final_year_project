@@ -1,9 +1,12 @@
-import axios, { AxiosInstance, AxiosResponse, AxiosError } from 'axios';
+import axios, { AxiosInstance, AxiosResponse, AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { apiConfig } from '@/config';
 import { ApiResponse } from '@/types';
+import { toCamelCaseDeep, toSnakeCaseDeep } from './case-transformer';
 
 class ApiClient {
   private axiosInstance: AxiosInstance;
+  private isRefreshing = false;
+  private refreshSubscribers: ((token: string) => void)[] = [];
 
   constructor() {
     this.axiosInstance = axios.create({
@@ -19,39 +22,86 @@ class ApiClient {
   }
 
   private setupInterceptors() {
-    // Request interceptor
+    // Request interceptor - Add auth token and transform to snake_case
     this.axiosInstance.interceptors.request.use(
       (config) => {
+        // Add authorization token
         const token = this.getAccessToken();
         if (token && token !== 'undefined' && token !== 'null') {
           config.headers.Authorization = `Bearer ${token}`;
         }
+
+        // Transform request body to snake_case (if not FormData)
+        if (config.data && !(config.data instanceof FormData)) {
+          config.data = toSnakeCaseDeep(config.data);
+        }
+
         return config;
       },
       (error) => Promise.reject(error)
     );
 
-    // Response interceptor
+    // Response interceptor - Handle 401 and transform to camelCase
     this.axiosInstance.interceptors.response.use(
-      (response) => response,
+      (response) => {
+        // Transform response data to camelCase
+        if (response.data) {
+          response.data = toCamelCaseDeep(response.data);
+        }
+        return response;
+      },
       async (error: AxiosError) => {
-        if (error.response?.status === 401 && error.config && !(error.config as any)._retry) {
-          (error.config as any)._retry = true;
+        const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+
+        // Handle 401 Unauthorized - Token refresh flow
+        if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
+          if (this.isRefreshing) {
+            // If already refreshing, queue this request
+            return new Promise((resolve) => {
+              this.refreshSubscribers.push((token: string) => {
+                originalRequest.headers.Authorization = `Bearer ${token}`;
+                resolve(this.axiosInstance(originalRequest));
+              });
+            });
+          }
+
+          originalRequest._retry = true;
+          this.isRefreshing = true;
+
           try {
             const refreshToken = this.getRefreshToken();
             if (refreshToken) {
-              const response = await this.refreshToken();
-              error.config.headers!.Authorization = `Bearer ${response.access_token}`;
-              return this.axiosInstance(error.config);
+              const response = await this.refreshTokenRequest();
+
+              // Update tokens
+              this.setAccessToken(response.accessToken);
+              this.setRefreshToken(response.refreshToken);
+
+              // Execute all queued requests with new token
+              this.refreshSubscribers.forEach((callback) => callback(response.accessToken));
+              this.refreshSubscribers = [];
+
+              // Retry original request
+              originalRequest.headers.Authorization = `Bearer ${response.accessToken}`;
+              return this.axiosInstance(originalRequest);
             }
           } catch (refreshError) {
+            // Refresh failed - clear auth and redirect
             this.clearTokens();
             if (typeof window !== 'undefined') {
               window.location.href = '/auth/login';
             }
             return Promise.reject(refreshError);
+          } finally {
+            this.isRefreshing = false;
           }
         }
+
+        // Transform error response to camelCase
+        if (error.response?.data) {
+          error.response.data = toCamelCaseDeep(error.response.data);
+        }
+
         return Promise.reject(error);
       }
     );
@@ -84,46 +134,61 @@ class ApiClient {
     return null;
   }
 
-  private setUserPermissions(permissions: Record<string, string[]>): void {
+  private setUserScopes(scopes: Record<string, string[]>): void {
     if (typeof window !== 'undefined') {
-      localStorage.setItem('userPermissions', JSON.stringify(permissions));
+      localStorage.setItem('userScopes', JSON.stringify(scopes));
     }
   }
 
-  public getUserPermissions(): Record<string, string[]> | null {
+  public getUserScopes(): Record<string, string[]> | null {
     if (typeof window !== 'undefined') {
-      const permissions = localStorage.getItem('userPermissions');
-      return permissions ? JSON.parse(permissions) : null;
+      const scopes = localStorage.getItem('userScopes');
+      return scopes ? JSON.parse(scopes) : null;
     }
     return null;
+  }
+
+  // Backward compatibility - keep old method name
+  public getUserPermissions(): Record<string, string[]> | null {
+    return this.getUserScopes();
   }
 
   public clearTokens(): void {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');
-      localStorage.removeItem('userPermissions');
+      localStorage.removeItem('userScopes');
+      localStorage.removeItem('userPermissions'); // Keep for backward compatibility
     }
   }
 
-  private async refreshToken() {
+  private async refreshTokenRequest() {
     const refreshToken = this.getRefreshToken();
     if (!refreshToken) {
       throw new Error('No refresh token available');
     }
 
-    const response: AxiosResponse<ApiResponse<any>> = await this.axiosInstance.post(
-      apiConfig.endpoints.auth.refreshToken,
-      { refresh_token: refreshToken }
+    // Bypass interceptors for refresh token request to avoid transformation loop
+    const response: AxiosResponse<ApiResponse<any>> = await axios.post(
+      `${apiConfig.baseUrl}${apiConfig.endpoints.auth.refreshToken}`,
+      { refresh_token: refreshToken },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        withCredentials: true,
+      }
     );
 
-    const authResponse = response.data.data;
-    if (authResponse) {
-      this.setAccessToken(authResponse.access_token);
-      this.setRefreshToken(authResponse.refresh_token);
+    // Manually transform response since we bypassed interceptors
+    const transformedData = toCamelCaseDeep(response.data);
+    const authResponse = transformedData.data;
+
+    if (!authResponse) {
+      throw new Error('Invalid refresh token response');
     }
 
-    return authResponse!;
+    return authResponse;
   }
 
   // Generic request methods
@@ -158,11 +223,11 @@ class ApiClient {
   }
 
   // Token setters for external use
-  setTokens(accessToken: string, refreshToken: string, permissions?: Record<string, string[]>) {
+  setTokens(accessToken: string, refreshToken: string, scopes?: Record<string, string[]>) {
     this.setAccessToken(accessToken);
     this.setRefreshToken(refreshToken);
-    if (permissions) {
-      this.setUserPermissions(permissions);
+    if (scopes) {
+      this.setUserScopes(scopes);
     }
   }
 }

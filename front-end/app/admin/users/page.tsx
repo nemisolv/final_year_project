@@ -1,20 +1,17 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { apiClient, User, PaginatedResponse } from '@/lib/api';
+import * as React from 'react';
+import { ColumnDef } from '@tanstack/react-table';
+import { MoreHorizontal, Pencil, Trash2, UserPlus, Shield, ShieldOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,283 +22,292 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { Badge } from '@/components/ui/badge';
+import { DataTable } from '@/components/admin/data-table';
+import { UserFormDialog } from '@/components/admin/user-form-dialog';
+import { userManagementService } from '@/services/user-management.service';
+import { roleManagementService } from '@/services/role-management.service';
+import { UserListItem, UserDetail } from '@/types/user-management';
+import { RoleListItem } from '@/types/role-management';
 import { toast } from 'sonner';
-import { ROLES } from '@/lib/auth';
-import {
-  Search,
-  Plus,
-  Edit,
-  Trash2,
-  UserCheck,
-  UserX,
-  ChevronLeft,
-  ChevronRight,
-  Loader2,
-} from 'lucide-react';
 
 export default function UsersManagementPage() {
-  const router = useRouter();
-  const [users, setUsers] = useState<User[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [currentPage, setCurrentPage] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
-  const [totalElements, setTotalElements] = useState(0);
-  const [pageSize] = useState(10);
-  const [deleteUserId, setDeleteUserId] = useState<number | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [users, setUsers] = React.useState<UserListItem[]>([]);
+  const [roles, setRoles] = React.useState<RoleListItem[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [totalPages, setTotalPages] = React.useState(1);
+  const [currentPage, setCurrentPage] = React.useState(1);
+  const [totalItems, setTotalItems] = React.useState(0);
+  const [formOpen, setFormOpen] = React.useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
+  const [selectedUser, setSelectedUser] = React.useState<UserDetail | null>(null);
+  const [userToDelete, setUserToDelete] = React.useState<UserListItem | null>(null);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
 
-  useEffect(() => {
-    loadUsers();
-  }, [currentPage]);
-
-  const loadUsers = async () => {
+  const fetchUsers = React.useCallback(async (page: number = 1) => {
     try {
-      setIsLoading(true);
-      const response = await apiClient.getUsers(currentPage, pageSize, 'createdAt,desc');
+      setLoading(true);
+      const response = await userManagementService.getUsers({
+        page: page - 1,
+        size: 10,
+      });
       setUsers(response.content);
       setTotalPages(response.totalPages);
-      setTotalElements(response.totalElements);
-    } catch (error: any) {
-      console.error('Failed to load users:', error);
+      setCurrentPage(page);
+      setTotalItems(response.totalElements);
+    } catch (error) {
       toast.error('Không thể tải danh sách người dùng');
+      console.error('Error fetching users:', error);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
+    }
+  }, []);
+
+  const fetchRoles = React.useCallback(async () => {
+    try {
+      const response = await roleManagementService.getRoles({ page: 0, size: 100 });
+      setRoles(response.content);
+    } catch (error) {
+      toast.error('Không thể tải danh sách vai trò');
+      console.error('Error fetching roles:', error);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    fetchUsers();
+    fetchRoles();
+  }, [fetchUsers, fetchRoles]);
+
+  const handleCreate = () => {
+    setSelectedUser(null);
+    setFormOpen(true);
+  };
+
+  const handleEdit = async (user: UserListItem) => {
+    try {
+      const userDetail = await userManagementService.getUserById(user.id);
+      setSelectedUser(userDetail);
+      setFormOpen(true);
+    } catch (error) {
+      toast.error('Không thể tải thông tin người dùng');
+      console.error('Error fetching user detail:', error);
     }
   };
 
-  const handleToggleStatus = async (userId: number, currentStatus?: boolean) => {
-    try {
-      await apiClient.toggleUserStatus(userId, !currentStatus);
-      toast.success(
-        !currentStatus
-          ? 'Đã kích hoạt tài khoản người dùng'
-          : 'Đã vô hiệu hóa tài khoản người dùng'
-      );
-      await loadUsers();
-    } catch (error: any) {
-      console.error('Failed to toggle user status:', error);
-      toast.error('Không thể thay đổi trạng thái người dùng');
-    }
+  const handleDelete = (user: UserListItem) => {
+    setUserToDelete(user);
+    setDeleteDialogOpen(true);
   };
 
-  const handleDeleteUser = async () => {
-    if (!deleteUserId) return;
+  const confirmDelete = async () => {
+    if (!userToDelete) return;
 
     try {
-      setIsDeleting(true);
-      await apiClient.deleteUser(deleteUserId);
+      setIsSubmitting(true);
+      await userManagementService.deleteUser(userToDelete.id);
       toast.success('Đã xóa người dùng thành công');
-      setDeleteUserId(null);
-      await loadUsers();
-    } catch (error: any) {
-      console.error('Failed to delete user:', error);
+      fetchUsers(currentPage);
+      setDeleteDialogOpen(false);
+    } catch (error) {
       toast.error('Không thể xóa người dùng');
+      console.error('Error deleting user:', error);
     } finally {
-      setIsDeleting(false);
+      setIsSubmitting(false);
     }
   };
 
-  const filteredUsers = users.filter(
-    user =>
-      user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.full_name?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString('vi-VN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  };
-
-  const getRoleBadgeColor = (role: string) => {
-    switch (role) {
-      case ROLES.ADMIN:
-        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
-      case ROLES.MODERATOR:
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
-      default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300';
+  const handleActivate = async (user: UserListItem) => {
+    try {
+      await userManagementService.activateUser(user.id);
+      toast.success('Đã kích hoạt người dùng');
+      fetchUsers(currentPage);
+    } catch (error) {
+      toast.error('Không thể kích hoạt người dùng');
+      console.error('Error activating user:', error);
     }
   };
+
+  const handleDeactivate = async (user: UserListItem) => {
+    try {
+      await userManagementService.deactivateUser(user.id);
+      toast.success('Đã vô hiệu hóa người dùng');
+      fetchUsers(currentPage);
+    } catch (error) {
+      toast.error('Không thể vô hiệu hóa người dùng');
+      console.error('Error deactivating user:', error);
+    }
+  };
+
+  const handleSubmit = async (data: any) => {
+    try {
+      setIsSubmitting(true);
+      if (selectedUser) {
+        await userManagementService.updateUser(selectedUser.id, data);
+        toast.success('Đã cập nhật người dùng thành công');
+      } else {
+        await userManagementService.createUser(data);
+        toast.success('Đã tạo người dùng mới thành công');
+      }
+      fetchUsers(currentPage);
+      setFormOpen(false);
+    } catch (error: any) {
+      const message = error.response?.data?.message || 'Có lỗi xảy ra';
+      toast.error(message);
+      console.error('Error saving user:', error);
+      throw error;
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const columns: ColumnDef<UserListItem>[] = [
+    {
+      accessorKey: 'username',
+      header: 'Tên đăng nhập',
+    },
+    {
+      accessorKey: 'email',
+      header: 'Email',
+    },
+    {
+      accessorKey: 'name',
+      header: 'Họ tên',
+    },
+    {
+      accessorKey: 'status',
+      header: 'Trạng thái',
+      cell: ({ row }) => {
+        const status = row.original.status;
+        return (
+          <Badge variant={status === 'ACTIVE' ? 'default' : 'secondary'}>
+            {status === 'ACTIVE' ? 'Đang hoạt động' : 'Không hoạt động'}
+          </Badge>
+        );
+      },
+    },
+    {
+      accessorKey: 'emailVerified',
+      header: 'Email xác thực',
+      cell: ({ row }) => {
+        return (
+          <Badge variant={row.original.emailVerified ? 'default' : 'outline'}>
+            {row.original.emailVerified ? 'Đã xác thực' : 'Chưa xác thực'}
+          </Badge>
+        );
+      },
+    },
+    {
+      accessorKey: 'roleNames',
+      header: 'Vai trò',
+      cell: ({ row }) => {
+        const roleNames = row.original.roleNames || [];
+        if (roleNames.length === 0) return <span className="text-muted-foreground">Không có</span>;
+        return (
+          <div className="flex gap-1 flex-wrap">
+            {roleNames.map((role) => (
+              <Badge key={role} variant="outline">
+                {role}
+              </Badge>
+            ))}
+          </div>
+        );
+      },
+    },
+    {
+      id: 'actions',
+      cell: ({ row }) => {
+        const user = row.original;
+        const isActive = user.status === 'ACTIVE';
+
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Mở menu</span>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Hành động</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => handleEdit(user)}>
+                <Pencil className="mr-2 h-4 w-4" />
+                Chỉnh sửa
+              </DropdownMenuItem>
+              {isActive ? (
+                <DropdownMenuItem onClick={() => handleDeactivate(user)}>
+                  <ShieldOff className="mr-2 h-4 w-4" />
+                  Vô hiệu hóa
+                </DropdownMenuItem>
+              ) : (
+                <DropdownMenuItem onClick={() => handleActivate(user)}>
+                  <Shield className="mr-2 h-4 w-4" />
+                  Kích hoạt
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => handleDelete(user)} className="text-red-600">
+                <Trash2 className="mr-2 h-4 w-4" />
+                Xóa
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        );
+      },
+    },
+  ];
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-2xl">Quản lý người dùng</CardTitle>
-              <CardDescription>
-                Quản lý tài khoản người dùng trong hệ thống ({totalElements} người dùng)
-              </CardDescription>
-            </div>
-            <Button onClick={() => router.push('/admin/users/create')}>
-              <Plus className="mr-2 h-4 w-4" />
-              Thêm người dùng
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="mb-6">
-            <div className="relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Tìm kiếm theo email hoặc tên..."
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-          </div>
+    <div className="container mx-auto py-8">
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-3xl font-bold">Quản lý người dùng</h1>
+          <p className="text-muted-foreground">Quản lý người dùng và phân quyền trong hệ thống</p>
+        </div>
+        <Button onClick={handleCreate}>
+          <UserPlus className="mr-2 h-4 w-4" />
+          Thêm người dùng
+        </Button>
+      </div>
 
-          {isLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          ) : (
-            <>
-              <div className="rounded-md border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Họ tên</TableHead>
-                      <TableHead>Vai trò</TableHead>
-                      <TableHead>Trạng thái</TableHead>
-                      <TableHead>Ngày tạo</TableHead>
-                      <TableHead className="text-right">Thao tác</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredUsers.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                          Không tìm thấy người dùng nào
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      filteredUsers.map(user => (
-                        <TableRow key={user.id}>
-                          <TableCell className="font-medium">{user.email}</TableCell>
-                          <TableCell>{user.full_name}</TableCell>
-                          <TableCell>
-                            <div className="flex flex-wrap gap-1">
-                              {user.roles && user.roles.length > 0 ? (
-                                user.roles.map(role => (
-                                  <span
-                                    key={role}
-                                    className={`px-2 py-1 rounded-full text-xs font-medium ${getRoleBadgeColor(
-                                      role
-                                    )}`}
-                                  >
-                                    {role.replace('ROLE_', '')}
-                                  </span>
-                                ))
-                              ) : (
-                                <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300">
-                                  USER
-                                </span>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <span
-                              className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                user.enabled
-                                  ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
-                                  : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300'
-                              }`}
-                            >
-                              {user.enabled ? 'Hoạt động' : 'Vô hiệu hóa'}
-                            </span>
-                          </TableCell>
-                          <TableCell>{formatDate(user.created_at)}</TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex items-center justify-end gap-2">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleToggleStatus(user.id, user.enabled)}
-                              >
-                                {user.enabled ? (
-                                  <UserX className="h-4 w-4 text-orange-500" />
-                                ) : (
-                                  <UserCheck className="h-4 w-4 text-green-500" />
-                                )}
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setDeleteUserId(user.id)}
-                              >
-                                <Trash2 className="h-4 w-4 text-red-500" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
+      {loading && users.length === 0 ? (
+        <div className="text-center py-8">Đang tải...</div>
+      ) : (
+        <DataTable
+          columns={columns}
+          data={users}
+          searchKey="username"
+          searchPlaceholder="Tìm theo tên đăng nhập..."
+          pageSize={10}
+          totalPages={totalPages}
+          currentPage={currentPage}
+          onPageChange={fetchUsers}
+          totalItems={totalItems}
+        />
+      )}
 
-              {totalPages > 1 && (
-                <div className="flex items-center justify-between mt-4">
-                  <div className="text-sm text-muted-foreground">
-                    Trang {currentPage + 1} / {totalPages}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
-                      disabled={currentPage === 0}
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                      Trước
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setCurrentPage(prev => Math.min(totalPages - 1, prev + 1))}
-                      disabled={currentPage === totalPages - 1}
-                    >
-                      Sau
-                      <ChevronRight className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </>
-          )}
-        </CardContent>
-      </Card>
+      <UserFormDialog
+        open={formOpen}
+        onOpenChange={setFormOpen}
+        user={selectedUser}
+        roles={roles}
+        onSubmit={handleSubmit}
+        isLoading={isSubmitting}
+      />
 
-      <AlertDialog open={!!deleteUserId} onOpenChange={() => setDeleteUserId(null)}>
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Xác nhận xóa người dùng</AlertDialogTitle>
             <AlertDialogDescription>
-              Bạn có chắc chắn muốn xóa người dùng này? Hành động này không thể hoàn tác.
+              Bạn có chắc chắn muốn xóa người dùng <strong>{userToDelete?.username}</strong>? Hành
+              động này không thể hoàn tác.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Hủy</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteUser} disabled={isDeleting}>
-              {isDeleting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Đang xóa...
-                </>
-              ) : (
-                'Xóa'
-              )}
+            <AlertDialogCancel>Hủy</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} disabled={isSubmitting}>
+              {isSubmitting ? 'Đang xóa...' : 'Xóa'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -1,20 +1,18 @@
+// User entity with camelCase fields
 export interface User {
   id: number;
-  user_id: number;
+  userId: number;
   email: string;
   username: string;
-  fullName?: string;
-  name?: string;
-  roles?: string[] | null;
-  permissions?: Record<string, string[]>;
-  emailVerified?: boolean;
-  status?: string;
-  enabled?: boolean;
-  lastLogin?: string;
-  createdAt?: string;
+  name: string;
+  roles: string[];
+  permissions: Record<string, string[]>;
+  emailVerified: boolean;
+  lastLoginAt: string;
+  createdAt: string;
   updatedAt?: string;
   isOnboarded: boolean;
-  avatar?: string;
+  avatarUrl: string;
   // Profile fields
   englishLevel?: string;
   learningGoals?: string;
@@ -23,22 +21,35 @@ export interface User {
   notificationEnabled?: boolean;
   privacyLevel?: string;
   dob?: string;
-  onboarded?: boolean;
 }
 
+// User Onboarding Data
 export interface UserOnboardingData {
   dob: string | null;
-  daily_study_goal_in_minutes: number;
-  short_introduction: string;
-  english_level: string;
-  learning_goals: string;
+  dailyStudyGoalInMinutes: number;
+  shortIntroduction: string;
+  englishLevel: string;
+  learningGoals: string;
 }
 
+// User Create Request
 export interface UserCreateData {
   email: string;
   password: string;
-  firstName: string;
-  lastName: string;
-  phoneNumber?: string;
+  name: string;
   roles: string[];
+}
+
+// User Update Request
+export interface UserUpdateData {
+  name?: string;
+  username?: string;
+  avatarUrl?: string;
+  englishLevel?: string;
+  learningGoals?: string;
+  preferredAccent?: string;
+  dailyStudyGoal?: number;
+  notificationEnabled?: boolean;
+  privacyLevel?: string;
+  dob?: string;
 }

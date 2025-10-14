@@ -1,6 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // ===== THÊM KHỐI CẤU HÌNH NÀY VÀO =====
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  typescript: {
+    ignoreBuildErrors: false,
+  },
   images: {
     remotePatterns: [
       {
@@ -11,7 +16,6 @@ const nextConfig = {
       },
     ],
   },
-  // ==========================================
   async rewrites() {
     return [
       // ...

@@ -1,6 +1,7 @@
 package com.nemisolv.starter.payload.response;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -19,8 +20,8 @@ public class FullInfoProfile {
     private String email;
     private String username;
     private boolean emailVerified;
-    private List<String> roles;
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+//    private List<String> roles;
+    @JsonProperty("isOnboarded")  // jackson will convert to onboarded by default
     private boolean isOnboarded;
     private String englishLevel;
     private String learningGoals;
@@ -30,8 +31,10 @@ public class FullInfoProfile {
     private String privacyLevel;
     private String name;
     private LocalDateTime dob;
+    private String avatarUrl;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private LocalDateTime lastLoginAt;
 
     public static FullInfoProfile fromRs(ResultSet rs) throws SQLException {
         return FullInfoProfile.builder()
@@ -47,11 +50,12 @@ public class FullInfoProfile {
                 .preferredAccent(rs.getString("preferred_accent"))
                 .notificationEnabled(rs.getBoolean("notification_enabled"))
                 .privacyLevel(rs.getString("privacy_level"))
+                .avatarUrl(rs.getString("avatar_url"))
                 .name(rs.getString("name"))
                 .dob(rs.getTimestamp("dob") != null ? rs.getTimestamp("dob").toLocalDateTime() : null)
                 .createdAt(rs.getTimestamp("created_at") != null ? rs.getTimestamp("created_at").toLocalDateTime() : null)
                 .updatedAt(rs.getTimestamp("updated_at") !=  null ? rs.getTimestamp("updated_at").toLocalDateTime() : null)
-//                .lastLogin(rs.getTimestamp("last_login_at") != null ? rs.getTimestamp("last_login_at").toLocalDateTime() : null)
+                .lastLoginAt(rs.getTimestamp("last_login_at") != null ? rs.getTimestamp("last_login_at").toLocalDateTime() : null)
                 .build();
     }
 

@@ -182,7 +182,7 @@ export default function DashboardPage() {
         {/* Welcome Section */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-2">
-            Welcome back, {user?.username || user?.fullName || "Learner"}! 👋
+            Welcome back, {user?.username || user?.name || "Learner"}! 👋
           </h1>
           <p className="text-muted-foreground text-lg">
             Ready to continue your English learning journey?

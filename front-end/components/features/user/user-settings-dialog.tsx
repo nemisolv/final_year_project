@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { User } from '@/types';
 import { userService } from '@/services';
-import { formatDate } from '@/lib/utils';
+import { formatDate } from '@/lib/utils/format';
 import {
   Dialog,
   DialogContent,
@@ -43,10 +43,10 @@ type ProfileFormData = {
 };
 
 type LearningFormData = {
-  english_level: string;
-  learning_goals: string;
-  preferred_accent: string;
-  daily_study_goal: number;
+  englishLevel: string;
+  learningGoals: string;
+  preferredAccent: string;
+  dailyStudyGoal: number;
 };
 
 type PrivacyFormData = {
@@ -91,7 +91,7 @@ export function UserSettingsDialog({ user, onUserUpdate, trigger }: UserSettings
 
   const profileForm = useForm<ProfileFormData>({
     defaultValues: {
-      name: user.name || user.full_name || '',
+      name: user.name || '',
       username: user.username || '',
       email: user.email || '',
       dob: user.dob ? user.dob.split(' ')[0] : '',
@@ -100,17 +100,17 @@ export function UserSettingsDialog({ user, onUserUpdate, trigger }: UserSettings
 
   const learningForm = useForm<LearningFormData>({
     defaultValues: {
-      english_level: user.english_level || 'BEGINNER',
-      learning_goals: user.learning_goals || 'GENERAL',
-      preferred_accent: user.preferred_accent || 'AMERICAN',
-      daily_study_goal: user.daily_study_goal || 30,
+      englishLevel: user.englishLevel || 'BEGINNER',
+      learningGoals: user.learningGoals || 'GENERAL',
+      preferredAccent: user.preferredAccent || 'AMERICAN',
+      dailyStudyGoal: user.dailyStudyGoal || 30,
     },
   });
 
   const [notificationEnabled, setNotificationEnabled] = useState(
-    user.notification_enabled ?? true
+    user.notificationEnabled ?? true
   );
-  const [privacyLevel, setPrivacyLevel] = useState(user.privacy_level || 'PRIVATE');
+  const [privacyLevel, setPrivacyLevel] = useState(user.privacyLevel || 'PRIVATE');
 
   const handleProfileSubmit = async (data: ProfileFormData) => {
     setIsLoading(true);
@@ -135,10 +135,10 @@ export function UserSettingsDialog({ user, onUserUpdate, trigger }: UserSettings
     setIsLoading(true);
     try {
       const updatedUser = await userService.updateUser(user.id, {
-        english_level: data.english_level,
-        learning_goals: data.learning_goals,
-        preferred_accent: data.preferred_accent,
-        daily_study_goal: data.daily_study_goal,
+        englishLevel: data.englishLevel,
+        learningGoals: data.learningGoals,
+        preferredAccent: data.preferredAccent,
+        dailyStudyGoal: data.dailyStudyGoal,
       });
 
       toast.success('Cập nhật mục tiêu học tập thành công!');
@@ -155,8 +155,8 @@ export function UserSettingsDialog({ user, onUserUpdate, trigger }: UserSettings
     setIsLoading(true);
     try {
       const updatedUser = await userService.updateUser(user.id, {
-        notification_enabled: notificationEnabled,
-        privacy_level: privacyLevel,
+        notificationEnabled: notificationEnabled,
+        privacyLevel: privacyLevel,
       });
 
       toast.success('Cập nhật cài đặt riêng tư thành công!');
@@ -261,10 +261,10 @@ export function UserSettingsDialog({ user, onUserUpdate, trigger }: UserSettings
           <TabsContent value="learning" className="space-y-4">
             <form onSubmit={learningForm.handleSubmit(handleLearningSubmit)} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="english_level">Trình độ tiếng Anh</Label>
+                <Label htmlFor="englishLevel">Trình độ tiếng Anh</Label>
                 <Select
-                  defaultValue={learningForm.getValues('english_level')}
-                  onValueChange={(value) => learningForm.setValue('english_level', value)}
+                  defaultValue={learningForm.getValues('englishLevel')}
+                  onValueChange={(value) => learningForm.setValue('englishLevel', value)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Chọn trình độ" />
@@ -280,10 +280,10 @@ export function UserSettingsDialog({ user, onUserUpdate, trigger }: UserSettings
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="learning_goals">Mục tiêu học tập</Label>
+                <Label htmlFor="learningGoals">Mục tiêu học tập</Label>
                 <Select
-                  defaultValue={learningForm.getValues('learning_goals')}
-                  onValueChange={(value) => learningForm.setValue('learning_goals', value)}
+                  defaultValue={learningForm.getValues('learningGoals')}
+                  onValueChange={(value) => learningForm.setValue('learningGoals', value)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Chọn mục tiêu" />
@@ -299,10 +299,10 @@ export function UserSettingsDialog({ user, onUserUpdate, trigger }: UserSettings
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="preferred_accent">Giọng phát âm ưa thích</Label>
+                <Label htmlFor="preferredAccent">Giọng phát âm ưa thích</Label>
                 <Select
-                  defaultValue={learningForm.getValues('preferred_accent')}
-                  onValueChange={(value) => learningForm.setValue('preferred_accent', value)}
+                  defaultValue={learningForm.getValues('preferredAccent')}
+                  onValueChange={(value) => learningForm.setValue('preferredAccent', value)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Chọn giọng" />
@@ -318,14 +318,14 @@ export function UserSettingsDialog({ user, onUserUpdate, trigger }: UserSettings
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="daily_study_goal">Mục tiêu học mỗi ngày (phút)</Label>
+                <Label htmlFor="dailyStudyGoal">Mục tiêu học mỗi ngày (phút)</Label>
                 <Input
-                  id="daily_study_goal"
+                  id="dailyStudyGoal"
                   type="number"
                   min="5"
                   max="300"
                   step="5"
-                  {...learningForm.register('daily_study_goal', {
+                  {...learningForm.register('dailyStudyGoal', {
                     valueAsNumber: true,
                     required: true,
                   })}
@@ -392,7 +392,7 @@ export function UserSettingsDialog({ user, onUserUpdate, trigger }: UserSettings
 
         <div className="mt-4 pt-4 border-t">
           <p className="text-xs text-muted-foreground">
-            Tài khoản được tạo vào {formatDate(user.created_at)}
+            Tài khoản được tạo vào {formatDate(user.createdAt)}
           </p>
         </div>
       </DialogContent>

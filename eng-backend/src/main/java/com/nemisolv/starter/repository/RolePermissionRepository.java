@@ -173,10 +173,52 @@ public class RolePermissionRepository {
             throw new RuntimeException("Failed to delete role-permission mappings", e);
         }
     }
-    
-    /**
-     * Map ResultSet row to RolePermission object
-     */
+
+    public void deleteByRoleIdAndPermissionIdIn(Long roleId, Set<Long> permissionIds) {
+        if (permissionIds == null || permissionIds.isEmpty()) return;
+        String sql = "DELETE FROM role_permissions WHERE role_id = :roleId AND permission_id IN (:permissionIds)";
+        try {
+            Map<String, Object> params = new HashMap<>();
+            params.put("roleId", roleId);
+            params.put("permissionIds", permissionIds);
+            int rowsAffected = namedParameterJdbcTemplate.update(sql, params);
+            log.debug("Deleted {} role-permission mappings", rowsAffected);
+        } catch (Exception e) {
+            log.error("Error deleting role-permission mappings: {}", e.getMessage());
+            throw new RuntimeException("Failed to delete role-permission mappings", e);
+        }
+    }
+
+    public void insert(Long roleId, Long permissionId) {
+        String sql = "INSERT IGNORE INTO role_permissions (role_id, permission_id, created_at) VALUES (?, ?, ?)";
+        try {
+            mariadbJdbcTemplate.update(sql, roleId, permissionId, LocalDateTime.now());
+        } catch (Exception e) {
+            log.error("Error inserting role-permission: {}", e.getMessage());
+            throw new RuntimeException("Failed to insert role-permission", e);
+        }
+    }
+
+    public Integer countByRoleId(Long roleId) {
+        String sql = "SELECT COUNT(*) FROM role_permissions WHERE role_id = ?";
+        try {
+            Integer count = mariadbJdbcTemplate.queryForObject(sql, Integer.class, roleId);
+            return count != null ? count : 0;
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
+    public Long countByPermissionId(Long permissionId) {
+        String sql = "SELECT COUNT(*) FROM role_permissions WHERE permission_id = ?";
+        try {
+            Long count = mariadbJdbcTemplate.queryForObject(sql, Long.class, permissionId);
+            return count != null ? count : 0L;
+        } catch (Exception e) {
+            return 0L;
+        }
+    }
+
     private RolePermission mapRowToRolePermission(ResultSet rs, int rowNum) throws SQLException {
         RolePermission rolePermission = new RolePermission();
         rolePermission.setId(rs.getLong("id"));

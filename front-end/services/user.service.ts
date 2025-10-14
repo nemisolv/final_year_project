@@ -10,6 +10,12 @@ export class UserService {
     const permissions = apiClient.getUserPermissions();
     if (permissions) {
       user.permissions = permissions;
+
+      // Extract roles from permissions object keys if not already present
+      // permissions structure: { "ADMIN": [...], "USER": [...] }
+      if (!user.roles || user.roles.length === 0) {
+        user.roles = Object.keys(permissions);
+      }
     }
 
     return user;

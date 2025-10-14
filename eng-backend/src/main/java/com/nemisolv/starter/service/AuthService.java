@@ -347,7 +347,7 @@ public class AuthService {
         return AuthenticationResponse.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
-                .roles(rolePermissionMap)
+                .scopes(rolePermissionMap)
                 .build();
     }
 

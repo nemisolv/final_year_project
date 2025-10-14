@@ -167,14 +167,72 @@ public class PermissionRepository {
             return new ArrayList<>();
         }
     }
-    
-    /**
-     * Map ResultSet row to Permission object
-     */
+
+    public boolean existsById(Long id) {
+        String sql = "SELECT COUNT(*) FROM permissions WHERE id = ?";
+        try {
+            Integer count = mariadbJdbcTemplate.queryForObject(sql, Integer.class, id);
+            return count != null && count > 0;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public List<Permission> findByIdIn(Set<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return new ArrayList<>();
+        }
+        String sql = "SELECT * FROM permissions WHERE id IN (:ids)";
+        try {
+            Map<String, Object> params = new HashMap<>();
+            params.put("ids", ids);
+            return namedParameterJdbcTemplate.query(sql, params, this::mapRowToPermission);
+        } catch (Exception e) {
+            log.error("Error finding permissions by IDs: {}", e.getMessage());
+            return new ArrayList<>();
+        }
+    }
+
+    public List<Permission> findByRoleId(Long roleId) {
+        String sql = """
+            SELECT p.* FROM permissions p
+            INNER JOIN role_permissions rp ON p.id = rp.permission_id
+            WHERE rp.role_id = ?
+            ORDER BY p.name
+            """;
+        try {
+            return mariadbJdbcTemplate.query(sql, this::mapRowToPermission, roleId);
+        } catch (Exception e) {
+            log.error("Error finding permissions by role ID {}: {}", roleId, e.getMessage());
+            return new ArrayList<>();
+        }
+    }
+
+    public List<Permission> findByResourceType(String resourceType) {
+        String sql = "SELECT * FROM permissions WHERE resource_type = ? ORDER BY action";
+        try {
+            return mariadbJdbcTemplate.query(sql, this::mapRowToPermission, resourceType);
+        } catch (Exception e) {
+            log.error("Error finding permissions by resource type {}: {}", resourceType, e.getMessage());
+            return new ArrayList<>();
+        }
+    }
+
+    public boolean existsByResourceTypeAndAction(String resourceType, String action) {
+        String sql = "SELECT COUNT(*) FROM permissions WHERE resource_type = ? AND action = ?";
+        try {
+            Integer count = mariadbJdbcTemplate.queryForObject(sql, Integer.class, resourceType, action);
+            return count != null && count > 0;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
     private Permission mapRowToPermission(ResultSet rs, int rowNum) throws SQLException {
         Permission permission = new Permission();
         permission.setId(rs.getLong("id"));
         permission.setName(rs.getString("name"));
+        permission.setDisplayName(rs.getString("display_name"));
         permission.setDescription(rs.getString("display_name"));
         permission.setResourceType(rs.getString("resource_type"));
         permission.setAction(rs.getString("action"));
