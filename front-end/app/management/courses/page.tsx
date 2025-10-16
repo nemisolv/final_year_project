@@ -43,7 +43,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Loader2,
-  Filter,
   X,
 } from 'lucide-react';
 

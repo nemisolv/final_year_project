@@ -1,7 +1,6 @@
 import axios, { AxiosInstance, AxiosResponse, AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { apiConfig } from '@/config';
 import { ApiResponse } from '@/types';
-import { toCamelCaseDeep, toSnakeCaseDeep } from './case-transformer';
 
 class ApiClient {
   private axiosInstance: AxiosInstance;
@@ -22,7 +21,7 @@ class ApiClient {
   }
 
   private setupInterceptors() {
-    // Request interceptor - Add auth token and transform to snake_case
+    // Request interceptor - Add auth token 
     this.axiosInstance.interceptors.request.use(
       (config) => {
         // Add authorization token
@@ -31,10 +30,6 @@ class ApiClient {
           config.headers.Authorization = `Bearer ${token}`;
         }
 
-        // Transform request body to snake_case (if not FormData)
-        if (config.data && !(config.data instanceof FormData)) {
-          config.data = toSnakeCaseDeep(config.data);
-        }
 
         return config;
       },
@@ -44,10 +39,7 @@ class ApiClient {
     // Response interceptor - Handle 401 and transform to camelCase
     this.axiosInstance.interceptors.response.use(
       (response) => {
-        // Transform response data to camelCase
-        if (response.data) {
-          response.data = toCamelCaseDeep(response.data);
-        }
+   
         return response;
       },
       async (error: AxiosError) => {
@@ -95,11 +87,6 @@ class ApiClient {
           } finally {
             this.isRefreshing = false;
           }
-        }
-
-        // Transform error response to camelCase
-        if (error.response?.data) {
-          error.response.data = toCamelCaseDeep(error.response.data);
         }
 
         return Promise.reject(error);
@@ -180,9 +167,7 @@ class ApiClient {
       }
     );
 
-    // Manually transform response since we bypassed interceptors
-    const transformedData = toCamelCaseDeep(response.data);
-    const authResponse = transformedData.data;
+    const authResponse = response.data.data;
 
     if (!authResponse) {
       throw new Error('Invalid refresh token response');
