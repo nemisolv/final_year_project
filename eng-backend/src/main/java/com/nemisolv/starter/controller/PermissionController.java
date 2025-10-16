@@ -15,7 +15,7 @@ import java.util.Map;
  * Provides endpoints for clients to check user permissions
  */
 @RestController
-@RequestMapping("/api/permissions")
+@RequestMapping("/api/v1/permissions")
 @RequiredArgsConstructor
 @Slf4j
 public class PermissionController {

@@ -1,11 +1,11 @@
 package com.nemisolv.starter.repository;
 
 import com.nemisolv.starter.enums.UserStatus;
+import com.nemisolv.starter.pagination.Pageable;
 import com.nemisolv.starter.payload.admin.AdminUserResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.data.domain.Pageable;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -52,7 +52,7 @@ public class AdminUserRepository {
             LIMIT ? OFFSET ?
             """.formatted(getSortClause(pageable));
 
-        int offset = pageable.getPageNumber() * pageable.getPageSize();
+        int offset = pageable.getOffset();
 
         return mariadbJdbcTemplate.query(
             sql,
@@ -246,8 +246,8 @@ public class AdminUserRepository {
     }
 
     private String getSortClause(Pageable pageable) {
-        if (pageable.getSort().isSorted()) {
-            return pageable.getSort().stream()
+        if (pageable.getSort() != null && pageable.getSort().isSorted()) {
+            return pageable.getSort().getOrders().stream()
                 .map(order -> {
                     String property = order.getProperty();
                     // Map property names to actual column names

@@ -1,5 +1,6 @@
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import { API } from './constants';
+import { PagedResponse } from '@/types';
 
 export interface ApiResponse<T> {
   code?: number;
@@ -52,26 +53,6 @@ export interface UserDashboardStats {
   exercisesCompleted: number;
 }
 
-export interface PaginatedResponse<T> {
-  content: T[];
-  pageable: {
-    pageNumber: number;
-    pageSize: number;
-    sort: {
-      sorted: boolean;
-      unsorted: boolean;
-      empty: boolean;
-    };
-  };
-  totalPages: number;
-  totalElements: number;
-  last: boolean;
-  first: boolean;
-  size: number;
-  number: number;
-  numberOfElements: number;
-  empty: boolean;
-}
 
 
 export interface Testimonial {
@@ -323,16 +304,16 @@ class ApiClient {
 
   // Admin endpoints
   async getUsers(
-    page: number = 0,
-    size: number = 10,
+    page: number = 1,
+    limit: number = 10,
     sort?: string
-  ): Promise<PaginatedResponse<User>> {
-    const params: Record<string, string | number> = { page, size };
+  ): Promise<PagedResponse<User>> {
+    const params: Record<string, string | number> = { page, limit };
     if (sort) {
       params.sort = sort;
     }
 
-    const response: AxiosResponse<ApiResponse<PaginatedResponse<User>>> = await this.axiosInstance.get(
+    const response: AxiosResponse<ApiResponse<PagedResponse<User>>> = await this.axiosInstance.get(
       API.endpoints.admin.users,
       { params }
     );
@@ -390,7 +371,7 @@ class ApiClient {
 
   async getCurrentUser(): Promise<User> {
     try {
-      const response: AxiosResponse<ApiResponse<User>> = await this.axiosInstance.get('/users/me');
+      const response: AxiosResponse<ApiResponse<User>> = await this.axiosInstance.get('/api/v1/users/me');
       const user = response.data.data!;
 
       // Attach stored permissions to user object
@@ -416,12 +397,12 @@ class ApiClient {
     englishLevel: string;
     learningGoals: string;
   }): Promise<void> {
-    await this.axiosInstance.post('/users/onboarding', data);
+    await this.axiosInstance.post('/api/v1/users/onboarding', data);
   }
 
   async getDashboardStats(): Promise<UserDashboardStats> {
     const response: AxiosResponse<ApiResponse<UserDashboardStats>> = await this.axiosInstance.get(
-      '/users/me/dashboard-stats'
+      '/api/v1/users/me/dashboard-stats'
     );
     return response.data.data!;
   }

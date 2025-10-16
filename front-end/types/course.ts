@@ -106,8 +106,8 @@ export interface Category {
 }
 
 export interface PaginationParams {
-  page?: number;
-  size?: number;
+  page?: number;  // 1-indexed
+  limit?: number; // page size
   sortBy?: string;
   sortDir?: "ASC" | "DESC";
 }

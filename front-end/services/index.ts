@@ -5,3 +5,5 @@ export * from './role-management.service';
 export * from './permission-management.service';
 export * from './chat.service';
 export * from './grammar.service';
+export * from './tts.service';
+export * from './pronunciation.service';

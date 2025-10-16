@@ -1,6 +1,7 @@
 package com.nemisolv.starter.controller;
 
 import com.nemisolv.starter.payload.ApiResponse;
+import com.nemisolv.starter.payload.PagedResponse;
 import com.nemisolv.starter.payload.course.CourseRequest;
 import com.nemisolv.starter.payload.course.CourseResponse;
 import com.nemisolv.starter.payload.course.LessonRequest;
@@ -9,10 +10,8 @@ import com.nemisolv.starter.service.CourseService;
 import com.nemisolv.starter.service.LessonService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import com.nemisolv.starter.pagination.Pageable;
+import com.nemisolv.starter.pagination.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -21,7 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/courses")
+@RequestMapping("/api/v1/courses")
 @RequiredArgsConstructor
 public class CourseController {
 
@@ -29,7 +28,7 @@ public class CourseController {
     private final LessonService lessonService;
 
     @GetMapping
-    public ApiResponse<Page<CourseResponse>> getAllCourses(
+    public ApiResponse<PagedResponse<CourseResponse>> getAllCourses(
             @RequestParam(required = false) Long categoryId,
             @RequestParam(required = false) String difficultyLevel,
             @RequestParam(required = false) Boolean isPublished,
@@ -40,12 +39,13 @@ public class CourseController {
             @RequestParam(defaultValue = "createdAt") String sortBy,
             @RequestParam(defaultValue = "DESC") String sortDir
     ) {
-        Sort sort = sortDir.equalsIgnoreCase("ASC")
-                ? Sort.by(sortBy).ascending()
-                : Sort.by(sortBy).descending();
-        Pageable pageable = PageRequest.of(page, size, sort);
+        Sort.Direction direction = sortDir.equalsIgnoreCase("ASC")
+                ? Sort.Direction.ASC
+                : Sort.Direction.DESC;
+        Sort sort = Sort.by(direction, sortBy);
+        Pageable pageable = Pageable.of(page, size, sort);
 
-        Page<CourseResponse> courses = courseService.getAllCourses(
+        PagedResponse<CourseResponse> courses = courseService.getAllCourses(
                 categoryId, difficultyLevel, isPublished, isPremium, search, pageable
         );
         return ApiResponse.success(courses);

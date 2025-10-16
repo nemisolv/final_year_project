@@ -2,15 +2,14 @@ package com.nemisolv.starter.service;
 
 import com.nemisolv.starter.entity.Course;
 import com.nemisolv.starter.exception.ResourceNotFoundException;
+import com.nemisolv.starter.payload.PagedResponse;
 import com.nemisolv.starter.payload.course.CourseRequest;
 import com.nemisolv.starter.payload.course.CourseResponse;
 import com.nemisolv.starter.repository.CourseRepository;
 import com.nemisolv.starter.util.SlugUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
+import com.nemisolv.starter.pagination.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,7 +24,7 @@ public class CourseService {
     private final CourseRepository courseRepository;
 
     @Transactional(readOnly = true)
-    public Page<CourseResponse> getAllCourses(Long categoryId, String difficultyLevel,
+    public PagedResponse<CourseResponse> getAllCourses(Long categoryId, String difficultyLevel,
                                              Boolean isPublished, Boolean isPremium,
                                              String search, Pageable pageable) {
         int offset = pageable.getPageNumber() * pageable.getPageSize();
@@ -40,7 +39,17 @@ public class CourseService {
                 .map(CourseResponse::from)
                 .collect(Collectors.toList());
 
-        return new PageImpl<>(responses, pageable, total);
+        int totalPages = (int) Math.ceil((double) total / pageable.getPageSize());
+        boolean isLast = (pageable.getPageNumber() + 1) >= totalPages;
+
+        return PagedResponse.<CourseResponse>builder()
+                .content(responses)
+                .page(pageable.getPageNumber() + 1)
+                .limit(pageable.getPageSize())
+                .totalElements(total)
+                .totalPages(totalPages)
+                .isLast(isLast)
+                .build();
     }
 
     @Transactional(readOnly = true)

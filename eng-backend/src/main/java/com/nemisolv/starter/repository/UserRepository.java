@@ -109,18 +109,18 @@ public class UserRepository {
     /**
      * Save user roles to user_roles table
      */
-    private void saveUserRoles(Integer userId, Set<com.nemisolv.starter.entity.Role> roles) {
+    public void saveUserRoles(Integer userId, Set<com.nemisolv.starter.entity.Role> roles) {
         // First, remove existing roles
         String deleteSql = "DELETE FROM user_roles WHERE user_id = ?";
         try {
             mariadbJdbcTemplate.update(deleteSql, userId);
-            
+
             // Then, insert new roles
             String insertSql = "INSERT INTO user_roles (user_id, role_id, assigned_at) VALUES (?, ?, ?)";
             for (com.nemisolv.starter.entity.Role role : roles) {
                 mariadbJdbcTemplate.update(insertSql, userId, role.getId(), LocalDateTime.now());
             }
-            
+
             log.debug("Saved {} roles for user {}", roles.size(), userId);
         } catch (Exception e) {
             log.error("Error saving user roles for user {}: {}", userId, e.getMessage());
@@ -163,7 +163,80 @@ public class UserRepository {
         mariadbJdbcTemplate.update(sql, hashedPassword, LocalDateTime.now(), id);
     }
 
+    public boolean existsByUsername(String username) {
+        String sql = "SELECT COUNT(*) FROM users WHERE username = ?";
+        Integer count = mariadbJdbcTemplate.queryForObject(sql, Integer.class, username);
+        return count != null && count > 0;
+    }
 
+    public boolean existsByEmail(String email) {
+        String sql = "SELECT COUNT(*) FROM users WHERE email = ?";
+        Integer count = mariadbJdbcTemplate.queryForObject(sql, Integer.class, email);
+        return count != null && count > 0;
+    }
+
+    public boolean existsById(Integer id) {
+        String sql = "SELECT COUNT(*) FROM users WHERE id = ?";
+        Integer count = mariadbJdbcTemplate.queryForObject(sql, Integer.class, id);
+        return count != null && count > 0;
+    }
+
+    public User save(User user) {
+        if (user.getId() == null) {
+            // Insert new user
+            Integer id = signUpNormalUser(user);
+            user.setId(id);
+        } else {
+            // Update existing user
+            String sql = """
+                UPDATE users SET username = ?, email = ?, status = ?,
+                       provider = ?, password_hashed = ?, email_verified = ?, updated_at = ?
+                WHERE id = ?
+                """;
+            mariadbJdbcTemplate.update(sql,
+                user.getUsername(),
+                user.getEmail(),
+                user.getStatus().getValue(),
+                user.getAuthProvider().getValue(),
+                user.getHashedPassword(),
+                user.isEmailVerified(),
+                LocalDateTime.now(),
+                user.getId()
+            );
+        }
+        return user;
+    }
+
+    public void deleteById(Integer id) {
+        String sql = "DELETE FROM users WHERE id = ?";
+        mariadbJdbcTemplate.update(sql, id);
+    }
+
+    public com.nemisolv.starter.pagination.Page<User> findAll(com.nemisolv.starter.pagination.Pageable pageable) {
+        String countSql = "SELECT COUNT(*) FROM users WHERE status = ?";
+        Long total = mariadbJdbcTemplate.queryForObject(countSql, Long.class, UserStatus.ACTIVE.getValue());
+        total = total != null ? total : 0;
+
+        StringBuilder sql = new StringBuilder("SELECT * FROM users WHERE status = ?");
+
+        // Add ORDER BY if sort is present
+        if (pageable.getSort() != null && pageable.getSort().isSorted()) {
+            sql.append(" ORDER BY ").append(pageable.getSort().toSql());
+        } else {
+            sql.append(" ORDER BY created_at DESC");
+        }
+
+        sql.append(" LIMIT ? OFFSET ?");
+
+        List<User> users = mariadbJdbcTemplate.query(sql.toString(),
+            (rs, rowNum) -> User.fromRs(rs),
+            UserStatus.ACTIVE.getValue(),
+            pageable.getPageSize(),
+            pageable.getOffset()
+        );
+
+        return com.nemisolv.starter.pagination.Page.of(users, pageable, total);
+    }
 
     private Optional<User> findUser( Object identifier, String value ) {
         try {

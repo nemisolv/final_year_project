@@ -19,21 +19,21 @@ export const COMMON_MENU_ITEMS: UserDropdownMenuItem[] = [
   },
 ];
 
-// Dashboard-specific menu items
-export const DASHBOARD_MENU_ITEMS: UserDropdownMenuItem[] = [
+// Learning-specific menu items
+export const LEARNING_MENU_ITEMS: UserDropdownMenuItem[] = [
   {
-    label: 'Dashboard',
-    icon: LayoutDashboard,
-    href: '/dashboard',
-  },
-  {
-    label: 'Lộ trình học',
-    icon: BookOpen,
-    href: '/learning/path',
-  },
-  {
-    label: 'Tiến độ của tôi',
+    label: 'Học tập',
     icon: GraduationCap,
+    href: '/learning',
+  },
+  {
+    label: 'Khóa học của tôi',
+    icon: BookOpen,
+    href: '/learning/courses',
+  },
+  {
+    label: 'Tiến độ',
+    icon: LayoutDashboard,
     href: '/learning/progress',
   },
 ];
@@ -41,9 +41,9 @@ export const DASHBOARD_MENU_ITEMS: UserDropdownMenuItem[] = [
 // Admin-specific menu items (requires admin role)
 export const ADMIN_MENU_ITEMS: UserDropdownMenuItem[] = [
   {
-    label: 'Trang quản trị',
+    label: 'Quản trị hệ thống',
     icon: Shield,
-    href: '/admin',
+    href: '/management',
     requiredRoles: ['ROLE_ADMIN', 'ADMIN'],
   },
 ];
@@ -51,14 +51,9 @@ export const ADMIN_MENU_ITEMS: UserDropdownMenuItem[] = [
 // Marketing page menu items
 export const MARKETING_MENU_ITEMS: UserDropdownMenuItem[] = [
   {
-    label: 'Trang quản lí',
-    icon: LayoutDashboard,
-    href: '/dashboard',
-  },
-  {
-    label: 'Lộ trình học',
-    icon: BookOpen,
-    href: '/learning/path',
+    label: 'Vào học',
+    icon: GraduationCap,
+    href: '/learning',
   },
 ];
 
@@ -69,11 +64,8 @@ export const USER_MENU_PRESETS = {
   // For marketing/landing pages
   marketing: [...ADMIN_MENU_ITEMS, ...MARKETING_MENU_ITEMS],
 
-  // For dashboard pages
-  dashboard: [...ADMIN_MENU_ITEMS, ...DASHBOARD_MENU_ITEMS, ...COMMON_MENU_ITEMS],
-
   // For learning pages
-  learning: [...ADMIN_MENU_ITEMS, ...DASHBOARD_MENU_ITEMS],
+  learning: [...ADMIN_MENU_ITEMS, ...LEARNING_MENU_ITEMS, ...COMMON_MENU_ITEMS],
 
   // Minimal menu with just admin link and settings
   minimal: [...ADMIN_MENU_ITEMS, ...COMMON_MENU_ITEMS],

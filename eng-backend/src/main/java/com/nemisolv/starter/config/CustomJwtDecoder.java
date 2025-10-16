@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
+import java.util.Arrays;
 import java.util.Objects;
 
 @Component
@@ -35,7 +36,11 @@ public class CustomJwtDecoder implements JwtDecoder {
     private NimbusJwtDecoder nimbusJwtDecoder = null;
     @Override
     public Jwt decode(String token) throws JwtException {
+
         try {
+
+
+
             // Check if token is null or empty
             if (token == null || token.trim().isEmpty()) {
                 log.debug("No token provided for decoding");

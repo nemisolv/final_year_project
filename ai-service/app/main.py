@@ -51,6 +51,8 @@ async def health_check():
         services={
             "claude": "connected" if settings.ANTHROPIC_API_KEY else "not_configured",
             "backend": "configured" if settings.BACKEND_URL else "not_configured",
+            "azure_speech": "configured" if settings.AZURE_SPEECH_KEY else "not_configured",
+            "elevenlabs_tts": "configured" if settings.ELEVENLABS_API_KEY else "not_configured",
         }
     )
 
@@ -71,6 +73,8 @@ async def root():
             "chat": "/api/v1/chat",
             "conversation": "/api/v1/conversation",
             "grammar": "/api/v1/grammar/check",
+            "pronunciation": "/api/v1/pronunciation/analyze",
+            "tts": "/api/v1/tts/synthesize",
             "quiz": "/api/v1/quiz/generate",
             "learning_path": "/api/v1/learning-path/generate",
         }

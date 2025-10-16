@@ -35,9 +35,9 @@ public class SecurityConfig {
     private final CustomJwtDecoder customJwtDecoder;
     private final CustomAuthEntryPoint customAuthEntryPoint;
 
-    private static final String[] PUBLIC_ENDPOINTS = {
-        "/auth/**",
-        "/error",
+    public static final String[] PUBLIC_ENDPOINTS = {
+            "/api/v1/auth/**",
+            "/error",
             "/api/v1/testimonials/featured",
             "/api/v1/platform/stats",
 
@@ -56,16 +56,13 @@ public class SecurityConfig {
                         .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
                         // All other requests need authentication
                         .anyRequest().authenticated())
-//                .exceptionHandling(customizer ->
-//                customizer.authenticationEntryPoint(customAuthEntryPoint)
-//        )
-                 .oauth2ResourceServer(oauth2 -> oauth2
-                         .jwt(jwtConfigurer -> jwtConfigurer
-                                 .decoder(customJwtDecoder)
-                                 .jwtAuthenticationConverter(jwtAuthenticationConverter())
+                .oauth2ResourceServer(oauth2 -> oauth2
+                        .jwt(jwtConfigurer -> jwtConfigurer
+                                .decoder(customJwtDecoder)
+                                .jwtAuthenticationConverter(jwtAuthenticationConverter())
 
-                         ).authenticationEntryPoint(customAuthEntryPoint)
-                 );
+                        ).authenticationEntryPoint(customAuthEntryPoint)
+                );
 
 
         return http.build();

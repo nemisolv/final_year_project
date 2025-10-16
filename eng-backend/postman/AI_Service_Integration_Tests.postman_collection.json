@@ -1,0 +1,579 @@
+{
+	"info": {
+		"_postman_id": "ai-service-integration-tests",
+		"name": "English Learning Platform - AI Service Integration Tests",
+		"description": "Complete Postman collection for testing AI service integration including Grammar Checking, TTS, Pronunciation Assessment, and Chat",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{auth_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "backend_url",
+			"value": "http://localhost:8092",
+			"type": "string"
+		},
+		{
+			"key": "ai_service_url",
+			"value": "http://localhost:8076",
+			"type": "string"
+		},
+		{
+			"key": "auth_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "user_email",
+			"value": "test@example.com",
+			"type": "string"
+		},
+		{
+			"key": "user_password",
+			"value": "password123",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "0. Authentication",
+			"item": [
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response contains access token\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('accessToken');",
+									"    pm.collectionVariables.set(\"auth_token\", jsonData.accessToken);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"{{user_email}}\",\n    \"password\": \"{{user_password}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{backend_url}}/api/auth/login",
+							"host": ["{{backend_url}}"],
+							"path": ["api", "auth", "login"]
+						},
+						"description": "Login to get authentication token. Token is automatically saved to collection variable."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "1. Grammar Checking",
+			"item": [
+				{
+					"name": "Check Grammar - Simple Typo",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response contains corrected text\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('correctedText');",
+									"    pm.expect(jsonData).to.have.property('originalText');",
+									"    pm.expect(jsonData).to.have.property('errors');",
+									"});",
+									"",
+									"pm.test(\"Errors detected\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.errors.length).to.be.greaterThan(0);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"text\": \"I hav a cat and it is vry nice.\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{backend_url}}/api/ai/grammar/check",
+							"host": ["{{backend_url}}"],
+							"path": ["api", "ai", "grammar", "check"]
+						},
+						"description": "Test grammar checking with simple typos (should use LanguageTool only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Check Grammar - Complex Error",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response contains detailed feedback\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.errors.length).to.be.greaterThan(0);",
+									"    pm.expect(jsonData.errors[0]).to.have.property('message');",
+									"    pm.expect(jsonData.errors[0]).to.have.property('suggestions');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"text\": \"The movie was very very very good and I think that maybe possibly we could try to attempt to start watching more.\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{backend_url}}/api/ai/grammar/check",
+							"host": ["{{backend_url}}"],
+							"path": ["api", "ai", "grammar", "check"]
+						},
+						"description": "Test grammar checking with complex style issues (should escalate to LLM)"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "2. Text-to-Speech",
+			"item": [
+				{
+					"name": "Get Available Voices",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response contains voices list\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('voices');",
+									"    pm.expect(jsonData).to.have.property('total');",
+									"    pm.expect(jsonData.voices).to.be.an('array');",
+									"});",
+									"",
+									"pm.test(\"Save first voice ID\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.voices.length > 0) {",
+									"        pm.collectionVariables.set(\"voice_id\", jsonData.voices[0].voiceId);",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{backend_url}}/api/ai/tts/voices",
+							"host": ["{{backend_url}}"],
+							"path": ["api", "ai", "tts", "voices"]
+						},
+						"description": "Retrieve list of available TTS voices from ElevenLabs"
+					},
+					"response": []
+				},
+				{
+					"name": "Synthesize Speech",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response contains audio file path\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('audioFilePath');",
+									"    pm.expect(jsonData).to.have.property('text');",
+									"    pm.expect(jsonData).to.have.property('voiceId');",
+									"    pm.collectionVariables.set(\"audio_filename\", jsonData.audioFilePath.split('/').pop());",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"text\": \"Hello! This is a test of the text-to-speech system. Welcome to English learning platform.\",\n    \"stability\": 0.5,\n    \"similarityBoost\": 0.75,\n    \"style\": 0.0\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{backend_url}}/api/ai/tts/synthesize",
+							"host": ["{{backend_url}}"],
+							"path": ["api", "ai", "tts", "synthesize"]
+						},
+						"description": "Generate speech audio from text using ElevenLabs TTS"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Audio File",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response is audio file\", function () {",
+									"    pm.expect(pm.response.headers.get('Content-Type')).to.include('audio');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{backend_url}}/api/ai/tts/audio/{{audio_filename}}",
+							"host": ["{{backend_url}}"],
+							"path": ["api", "ai", "tts", "audio", "{{audio_filename}}"]
+						},
+						"description": "Download generated audio file"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "3. Pronunciation Assessment",
+			"item": [
+				{
+					"name": "Check Service Health",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Service is available\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('available');",
+									"    pm.expect(jsonData).to.have.property('message');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{backend_url}}/api/ai/pronunciation/health",
+							"host": ["{{backend_url}}"],
+							"path": ["api", "ai", "pronunciation", "health"]
+						},
+						"description": "Check if pronunciation assessment service is available"
+					},
+					"response": []
+				},
+				{
+					"name": "Analyze Pronunciation",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response contains pronunciation scores\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('recognizedText');",
+									"    pm.expect(jsonData).to.have.property('overallScore');",
+									"    pm.expect(jsonData).to.have.property('wordScores');",
+									"    pm.expect(jsonData).to.have.property('feedback');",
+									"});",
+									"",
+									"pm.test(\"Word scores provided\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.wordScores).to.be.an('array');",
+									"    if (jsonData.wordScores.length > 0) {",
+									"        pm.expect(jsonData.wordScores[0]).to.have.property('word');",
+									"        pm.expect(jsonData.wordScores[0]).to.have.property('score');",
+									"        pm.expect(jsonData.wordScores[0]).to.have.property('feedback');",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"targetText\": \"Hello, how are you today?\",\n    \"audioPath\": \"/path/to/test_audio.wav\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{backend_url}}/api/ai/pronunciation/analyze",
+							"host": ["{{backend_url}}"],
+							"path": ["api", "ai", "pronunciation", "analyze"]
+						},
+						"description": "Analyze pronunciation using Azure Pronunciation Assessment. Note: Requires actual audio file path."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "4. Chat Stream",
+			"item": [
+				{
+					"name": "Start Chat Stream",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response is SSE stream\", function () {",
+									"    pm.expect(pm.response.headers.get('Content-Type')).to.include('text/event-stream');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"messages\": [\n        {\n            \"role\": \"user\",\n            \"content\": \"Hello! Can you help me learn English?\"\n        }\n    ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{backend_url}}/learning/chat-stream",
+							"host": ["{{backend_url}}"],
+							"path": ["learning", "chat-stream"]
+						},
+						"description": "Start streaming chat conversation with AI assistant"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "5. Direct AI Service Tests",
+			"item": [
+				{
+					"name": "AI Service Health Check",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"All services configured\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('services');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{ai_service_url}}/health",
+							"host": ["{{ai_service_url}}"],
+							"path": ["health"]
+						},
+						"description": "Check AI service health and configuration"
+					},
+					"response": []
+				},
+				{
+					"name": "Direct Grammar Check (AI Service)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Grammar check completed\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('correctedText');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"text\": \"I hav a cat\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{ai_service_url}}/api/v1/grammar/check",
+							"host": ["{{ai_service_url}}"],
+							"path": ["api", "v1", "grammar", "check"]
+						},
+						"description": "Test grammar checking directly on AI service (bypass backend)"
+					},
+					"response": []
+				},
+				{
+					"name": "Direct TTS Synthesize (AI Service)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"TTS synthesis completed\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('audioFilePath');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"text\": \"Hello world\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{ai_service_url}}/api/v1/tts/synthesize",
+							"host": ["{{ai_service_url}}"],
+							"path": ["api", "v1", "tts", "synthesize"]
+						},
+						"description": "Test TTS directly on AI service (bypass backend)"
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

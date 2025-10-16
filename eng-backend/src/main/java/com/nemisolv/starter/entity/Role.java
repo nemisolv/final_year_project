@@ -14,13 +14,14 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Role {
-    
+
     private Long id;
     private String name; // e.g., "ADMIN", "TEACHER", "STUDENT"
+    private String displayName; // e.g., "Administrator", "Teacher", "Student"
     private String description;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    
+
     // Many-to-many relationship with User
     private List<Permission> permissions;
     public Role(String name, String description) {
@@ -29,5 +30,5 @@ public class Role {
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
-    
+
 }

@@ -169,6 +169,35 @@ class ProgressResponse(BaseModel):
     next_goals: List[str]
 
 
+# Text-to-Speech
+class TTSRequest(BaseModel):
+    text: str
+    voice_id: Optional[str] = None
+    stability: Optional[float] = 0.5
+    similarity_boost: Optional[float] = 0.75
+    style: Optional[float] = 0.0
+    user_id: Optional[int] = None
+
+
+class TTSResponse(BaseModel):
+    audio_file_path: str
+    text: str
+    voice_id: str
+    duration_ms: Optional[int] = None
+
+
+class VoiceInfo(BaseModel):
+    voice_id: str
+    name: str
+    category: str
+    labels: Dict[str, str] = {}
+
+
+class VoicesListResponse(BaseModel):
+    voices: List[VoiceInfo]
+    total: int
+
+
 # Health Check
 class HealthCheck(BaseModel):
     status: str

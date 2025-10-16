@@ -1,23 +1,17 @@
-// front-end/components/features/admin/AdminSidebar.tsx
+// front-end/components/admin/admin-sidebar.tsx
 "use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, Users, BookOpen, Settings, MessageSquare, PieChart, Star, FileText, Shield, Key } from "lucide-react";
+import { LayoutDashboard, Users, BookOpen, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/common/logo";
 
-const adminRoutes = [
-  { href: "/admin", label: "Tổng quan", icon: BarChart3 },
-  { href: "/admin/users", label: "Quản lý người dùng", icon: Users },
-  { href: "/admin/roles", label: "Quản lý vai trò", icon: Shield },
-  { href: "/admin/permissions", label: "Quản lý quyền", icon: Key },
-  { href: "/admin/courses", label: "Khóa học", icon: BookOpen },
-  { href: "/admin/content", label: "Nội dung", icon: FileText },
-  { href: "/admin/scenarios", label: "Kịch bản", icon: MessageSquare },
-  { href: "/admin/progress", label: "Tiến độ", icon: PieChart },
-  { href: "/admin/feedback", label: "Phản hồi", icon: Star },
-  { href: "/admin/settings", label: "Cài đặt", icon: Settings },
+const managementRoutes = [
+  { href: "/management", label: "Tổng quan", icon: LayoutDashboard },
+  { href: "/management/users", label: "Người dùng", icon: Users },
+  { href: "/management/roles", label: "Vai trò & Quyền", icon: Shield },
+  { href: "/management/courses", label: "Khóa học", icon: BookOpen },
 ];
 
 export function AdminSidebar() {
@@ -29,7 +23,7 @@ export function AdminSidebar() {
         <Logo />
       </div>
       <nav className="space-y-2 flex-1">
-        {adminRoutes.map((route) => (
+        {managementRoutes.map((route) => (
           <Link
             key={route.href}
             href={route.href}

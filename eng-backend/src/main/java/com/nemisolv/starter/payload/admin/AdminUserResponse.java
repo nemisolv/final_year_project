@@ -19,7 +19,7 @@ public class AdminUserResponse {
     private String id;
     private String email;
     private String username;
-    private String fullName;
+    private String name;
     private List<String> roles;
     private boolean emailVerified;
     private String status;
@@ -42,7 +42,7 @@ public class AdminUserResponse {
                 .id(String.valueOf(rs.getInt("id")))
                 .email(rs.getString("email"))
                 .username(rs.getString("username"))
-                .fullName(rs.getString("full_name"))
+                .name(rs.getString("name"))
                 .roles(roles)
                 .emailVerified(rs.getBoolean("email_verified"))
                 .status(rs.getString("status"))

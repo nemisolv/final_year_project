@@ -16,6 +16,7 @@ import {
   AlertCircle
 } from "lucide-react";
 import { toast } from "sonner";
+import { pronunciationService } from "@/services/pronunciation.service";
 
 interface PronunciationResult {
   word: string;
@@ -118,10 +119,37 @@ export default function PronunciationPage() {
     setIsAnalyzing(true);
 
     try {
-      // TODO: Send recording to Azure Pronunciation Assessment API
-      // For now, this is mock data
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      // TODO: Implement audio recording capture
+      // For now, this is a placeholder - you'll need to capture the actual audio
+      // from the MediaStream and create a Blob
 
+      // Mock implementation - replace with actual audio capture
+      const mockAudioBlob = new Blob([], { type: 'audio/wav' });
+      const audioFile = new File([mockAudioBlob], 'recording.wav', { type: 'audio/wav' });
+
+      // Call the actual pronunciation service
+      const response = await pronunciationService.uploadAndAnalyze(audioFile, currentSentence);
+
+      // Transform response to UI format
+      const transformedResults: PronunciationResult[] = response.wordScores.map(wordScore => ({
+        word: wordScore.word,
+        accuracy: wordScore.score,
+        feedback: wordScore.feedback ||
+          (wordScore.score >= 80 ? "Excellent pronunciation!" :
+           wordScore.score >= 60 ? "Good! Keep practicing." :
+           "Needs improvement. Try again."),
+        status: wordScore.score >= 80 ? "correct" as const :
+                wordScore.score >= 60 ? "warning" as const :
+                "incorrect" as const
+      }));
+
+      setResults(transformedResults);
+      toast.success(`Analysis complete! Overall score: ${response.overallScore.toFixed(1)}/100`);
+    } catch (error) {
+      console.error("Failed to analyze pronunciation:", error);
+      toast.error("Failed to analyze pronunciation. Please try again.");
+
+      // Fallback to mock data for demo purposes
       const mockResults: PronunciationResult[] = [
         {
           word: "pronunciation",
@@ -135,19 +163,8 @@ export default function PronunciationPage() {
           feedback: "Excellent pronunciation!",
           status: "correct",
         },
-        {
-          word: "English",
-          accuracy: 65,
-          feedback: "The 'ng' sound needs improvement.",
-          status: "warning",
-        },
       ];
-
       setResults(mockResults);
-      toast.success("Analysis complete!");
-    } catch (error) {
-      console.error("Failed to analyze pronunciation:", error);
-      toast.error("Failed to analyze pronunciation. Please try again.");
     } finally {
       setIsAnalyzing(false);
     }

@@ -7,14 +7,20 @@ import {
   UserUpdateData,
   AssignRolesData,
 } from '@/types/user-management';
-import { PaginatedResponse, PaginationParams } from '@/types';
+import { PagedResponse } from '@/types';
+
+export interface PaginationParams {
+  page?: number;  // 1-indexed
+  limit?: number; // page size
+  sort?: string;
+}
 
 export class UserManagementService {
-  async getUsers(params: PaginationParams): Promise<PaginatedResponse<UserListItem>> {
+  async getUsers(params: PaginationParams): Promise<PagedResponse<UserListItem>> {
     return apiClient.get(`${apiConfig.endpoints.admin.users}`, { params });
   }
 
-  async searchUsers(keyword: string, params: PaginationParams): Promise<PaginatedResponse<UserListItem>> {
+  async searchUsers(keyword: string, params: PaginationParams): Promise<PagedResponse<UserListItem>> {
     return apiClient.get(`${apiConfig.endpoints.admin.users}/search`, {
       params: { ...params, keyword },
     });

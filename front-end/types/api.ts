@@ -1,28 +1,17 @@
 export interface ApiResponse<T> {
-  code?: number;
-  message?: string;
+  timestamp?: string;
+  code: number;
+  message: string;
   data?: T;
 }
 
-export interface PaginatedResponse<T> {
+export interface PagedResponse<T> {
   content: T[];
-  pageable: {
-    pageNumber: number;
-    pageSize: number;
-    sort: {
-      sorted: boolean;
-      unsorted: boolean;
-      empty: boolean;
-    };
-  };
-  totalPages: number;
+  page: number;          // 1-indexed
+  limit: number;         // page size
   totalElements: number;
-  last: boolean;
-  first: boolean;
-  size: number;
-  number: number;
-  numberOfElements: number;
-  empty: boolean;
+  totalPages: number;
+  isLast: boolean;
 }
 
 export interface ApiError {

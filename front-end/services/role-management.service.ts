@@ -8,10 +8,16 @@ import {
   AssignPermissionsData,
   RolePermission,
 } from '@/types/role-management';
-import { PaginatedResponse, PaginationParams } from '@/types';
+import { PagedResponse } from '@/types';
+
+export interface PaginationParams {
+  page?: number;  // 1-indexed
+  limit?: number; // page size
+  sort?: string;
+}
 
 export class RoleManagementService {
-  async getRoles(params: PaginationParams): Promise<PaginatedResponse<RoleListItem>> {
+  async getRoles(params: PaginationParams): Promise<PagedResponse<RoleListItem>> {
     return apiClient.get(`${apiConfig.endpoints.admin.roles}`, { params });
   }
 

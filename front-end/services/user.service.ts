@@ -1,6 +1,6 @@
 import { apiClient } from '@/lib/api/client';
 import { apiConfig } from '@/config';
-import { User, UserOnboardingData, PaginatedResponse } from '@/types';
+import { User, UserOnboardingData, PagedResponse } from '@/types';
 
 export class UserService {
   async getCurrentUser(): Promise<User> {
@@ -26,16 +26,16 @@ export class UserService {
   }
 
   async getUsers(
-    page: number = 0,
-    size: number = 10,
+    page: number = 1,
+    limit: number = 10,
     sort?: string
-  ): Promise<PaginatedResponse<User>> {
-    const params: Record<string, string | number> = { page, size };
+  ): Promise<PagedResponse<User>> {
+    const params: Record<string, string | number> = { page, limit };
     if (sort) {
       params.sort = sort;
     }
 
-    return await apiClient.get<PaginatedResponse<User>>(
+    return await apiClient.get<PagedResponse<User>>(
       apiConfig.endpoints.admin.users,
       { params }
     );

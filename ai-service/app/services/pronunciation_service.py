@@ -3,6 +3,7 @@ from vosk import Model as VoskModel, KaldiRecognizer
 from sqlalchemy.orm import Session
 from app.db.models import PronunciationAnalysis, AnalysisMethod
 from app.models import PronunciationRequest, PronunciationResponse, WordScore
+from app.services.azure_pronunciation_service import azure_pronunciation_service
 from datetime import datetime
 import logging
 import time
@@ -17,7 +18,10 @@ logger = logging.getLogger(__name__)
 
 class PronunciationService:
     def __init__(self):
-        # Initialize faster-whisper (primary)
+        # Initialize Azure Pronunciation Assessment (PRIORITY #1 - Best quality)
+        self.azure_service = azure_pronunciation_service
+
+        # Initialize faster-whisper (fallback #1)
         try:
             # Using small model for faster processing
             self.whisper_model = WhisperModel("small", device="cpu", compute_type="int8")
@@ -26,7 +30,7 @@ class PronunciationService:
             logger.warning(f"Failed to load faster-whisper: {str(e)}")
             self.whisper_model = None
 
-        # Initialize Vosk (fallback)
+        # Initialize Vosk (fallback #2)
         try:
             vosk_model_path = os.getenv("VOSK_MODEL_PATH", "models/vosk-model-small-en-us-0.15")
             if os.path.exists(vosk_model_path):
@@ -212,20 +216,74 @@ class PronunciationService:
 
     async def analyze_pronunciation(self, request: PronunciationRequest, db: Session = None) -> PronunciationResponse:
         """
-        Analyze pronunciation using faster-whisper with Vosk fallback
+        Analyze pronunciation using Azure (priority), with Whisper and Vosk as fallbacks
         """
         start_time = time.time()
         analysis_method = None
 
         try:
-            # Try faster-whisper first
+            # PRIORITY #1: Try Azure Pronunciation Assessment (most accurate)
+            if self.azure_service.is_available():
+                logger.info("Using Azure Pronunciation Assessment (primary method)")
+                azure_result = self.azure_service.assess_pronunciation(
+                    audio_file_path=request.audio_path,
+                    reference_text=request.target_text
+                )
+
+                if azure_result[0] is not None:  # Check if Azure succeeded
+                    recognized_text, word_scores, overall_score, detailed_results = azure_result
+                    analysis_method = AnalysisMethod.AZURE
+
+                    # Calculate WER for compatibility
+                    wer = self._calculate_wer(request.target_text, recognized_text)
+
+                    # Generate feedback
+                    feedback = []
+                    if overall_score >= 90:
+                        feedback.append("Outstanding pronunciation! Keep up the excellent work!")
+                    elif overall_score >= 75:
+                        feedback.append("Very good pronunciation overall. Minor adjustments on some words.")
+                    elif overall_score >= 60:
+                        feedback.append("Good effort! Focus on the words marked for improvement.")
+                    else:
+                        feedback.append("Keep practicing! Pay attention to word pronunciation and clarity.")
+
+                    # Add specific Azure insights
+                    if detailed_results:
+                        if detailed_results.get("fluency_score", 0) < 70:
+                            feedback.append("Try to speak more smoothly and at a steady pace.")
+                        if detailed_results.get("completeness_score", 0) < 80:
+                            feedback.append("Make sure to pronounce all words in the text.")
+
+                    processing_time = int((time.time() - start_time) * 1000)
+
+                    response = PronunciationResponse(
+                        recognized_text=recognized_text,
+                        word_scores=word_scores,
+                        overall_score=overall_score,
+                        word_error_rate=wer,
+                        feedback=feedback
+                    )
+
+                    # Store in database
+                    if db and request.user_id:
+                        self._store_analysis(
+                            db, request, recognized_text, word_scores,
+                            overall_score, wer, feedback, analysis_method, processing_time
+                        )
+
+                    return response
+                else:
+                    logger.warning("Azure Pronunciation Assessment failed, falling back to Whisper")
+
+            # FALLBACK #1: Try faster-whisper
             result = self._transcribe_with_whisper(request.audio_path)
 
             if result:
                 recognized_text, word_timings = result
                 analysis_method = AnalysisMethod.WHISPER
             else:
-                # Fallback to Vosk
+                # FALLBACK #2: Try Vosk
                 logger.info("Falling back to Vosk for transcription")
                 result = self._transcribe_with_vosk(request.audio_path)
 
@@ -233,7 +291,7 @@ class PronunciationService:
                     recognized_text, word_timings = result
                     analysis_method = AnalysisMethod.VOSK
                 else:
-                    raise Exception("Both Whisper and Vosk transcription failed")
+                    raise Exception("All pronunciation assessment methods failed")
 
             # Calculate word-level scores
             word_scores = self._calculate_word_scores(
@@ -272,32 +330,50 @@ class PronunciationService:
 
             # Store in database if session provided
             if db and request.user_id:
-                try:
-                    pronunciation_analysis = PronunciationAnalysis(
-                        user_id=request.user_id,
-                        target_text=request.target_text,
-                        recognized_text=recognized_text,
-                        audio_file_path=request.audio_path,
-                        word_scores=[ws.dict() for ws in word_scores],
-                        overall_score=overall_score,
-                        word_error_rate=wer,
-                        feedback=feedback,
-                        analysis_method=analysis_method,
-                        processing_time_ms=processing_time,
-                        created_at=datetime.now()
-                    )
-                    db.add(pronunciation_analysis)
-                    db.commit()
-                    logger.info(f"Stored pronunciation analysis for user {request.user_id} using {analysis_method}")
-                except Exception as db_error:
-                    logger.error(f"Failed to store pronunciation analysis: {str(db_error)}")
-                    db.rollback()
+                self._store_analysis(
+                    db, request, recognized_text, word_scores,
+                    overall_score, wer, feedback, analysis_method, processing_time
+                )
 
             return response
 
         except Exception as e:
             logger.error(f"Error in pronunciation service: {str(e)}")
             raise
+
+    def _store_analysis(
+        self,
+        db: Session,
+        request: PronunciationRequest,
+        recognized_text: str,
+        word_scores: List[WordScore],
+        overall_score: float,
+        wer: float,
+        feedback: List[str],
+        analysis_method,
+        processing_time: int
+    ):
+        """Helper method to store pronunciation analysis in database"""
+        try:
+            pronunciation_analysis = PronunciationAnalysis(
+                user_id=request.user_id,
+                target_text=request.target_text,
+                recognized_text=recognized_text,
+                audio_file_path=request.audio_path,
+                word_scores=[ws.dict() for ws in word_scores],
+                overall_score=overall_score,
+                word_error_rate=wer,
+                feedback=feedback,
+                analysis_method=analysis_method,
+                processing_time_ms=processing_time,
+                created_at=datetime.now()
+            )
+            db.add(pronunciation_analysis)
+            db.commit()
+            logger.info(f"Stored pronunciation analysis for user {request.user_id} using {analysis_method}")
+        except Exception as db_error:
+            logger.error(f"Failed to store pronunciation analysis: {str(db_error)}")
+            db.rollback()
 
 
 pronunciation_service = PronunciationService()

@@ -17,7 +17,7 @@ export interface GrammarCheckResponse {
 class GrammarService {
   async check(text: string): Promise<GrammarCheckResponse> {
     // Grammar endpoint returns data directly, not wrapped in ApiResponse
-    const response = await apiClient.instance.post<GrammarCheckResponse>('/api/ai/grammar/check', { text });
+    const response = await apiClient.instance.post<GrammarCheckResponse>('/api/v1/ai/grammar/check', { text });
     return response.data;
   }
 }

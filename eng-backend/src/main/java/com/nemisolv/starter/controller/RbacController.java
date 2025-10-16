@@ -22,7 +22,7 @@ import java.util.Map;
  */
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/rbac")
+@RequestMapping("/api/v1/rbac")
 @Slf4j
 public class RbacController {
     

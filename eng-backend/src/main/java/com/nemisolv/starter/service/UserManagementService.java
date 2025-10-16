@@ -5,17 +5,16 @@ import com.nemisolv.starter.entity.User;
 import com.nemisolv.starter.enums.UserStatus;
 import com.nemisolv.starter.exception.ConflictException;
 import com.nemisolv.starter.exception.ResourceNotFoundException;
+import com.nemisolv.starter.payload.PagedResponse;
 import com.nemisolv.starter.payload.admin.user.*;
 import com.nemisolv.starter.payload.admin.role.RoleResponse;
-import com.nemisolv.starter.repository.AdminUserRepository;
+import com.nemisolv.starter.repository.UserManagementViewRepository;
+import com.nemisolv.starter.repository.UserRepository;
 import com.nemisolv.starter.repository.RoleRepository;
-import com.nemisolv.starter.repository.UserProfileRepository;
-import com.nemisolv.starter.repository.UserStatsRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
+import com.nemisolv.starter.pagination.Page;
+import com.nemisolv.starter.pagination.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,51 +35,70 @@ import java.util.stream.Collectors;
 @Slf4j
 public class UserManagementService {
 
-    private final AdminUserRepository adminUserRepository;
+    private final UserRepository userRepository;
     private final RoleRepository roleRepository;
-    private final UserProfileRepository profileRepository;
-    private final UserStatsRepository statsRepository;
     private final PasswordEncoder passwordEncoder;
+    private final UserManagementViewRepository userManagementViewRepository;
 
     /**
-     * Lấy danh sách tất cả users với phân trang
+     * Lấy danh sách tất cả users với phân trang - sử dụng view + cache
      *
      * @param pageable Thông tin phân trang (page, size, sort)
-     * @return Page chứa danh sách UserListResponse
+     * @return PagedResponse chứa danh sách UserListResponse
      */
     @Transactional(readOnly = true)
-    public Page<UserListResponse> getAllUsers(Pageable pageable) {
+    public PagedResponse<UserListResponse> getAllUsers(Pageable pageable) {
         log.debug("Fetching all users with pagination: {}", pageable);
 
-        // Lấy users từ repository
-        Page<User> users = adminUserRepository.findAllWithRoles(pageable);
+        // Lấy users từ cached view repository - trả về AdminUserResponse
+        com.nemisolv.starter.pagination.Page<com.nemisolv.starter.payload.admin.AdminUserResponse> adminUsers =
+            userManagementViewRepository.findAll(pageable);
 
-        // Convert sang UserListResponse
-        List<UserListResponse> responses = users.getContent().stream()
-                .map(this::toListResponse)
+        // Convert AdminUserResponse sang UserListResponse
+        List<UserListResponse> responses = adminUsers.getContent().stream()
+                .map(this::fromAdminToListResponse)
                 .collect(Collectors.toList());
 
-        return new PageImpl<>(responses, pageable, users.getTotalElements());
+        int totalPages = adminUsers.getTotalPages();
+        boolean isLast = adminUsers.isLast();
+
+        return PagedResponse.<UserListResponse>builder()
+                .content(responses)
+                .page(pageable.getPage() + 1)  // Convert from 0-indexed to 1-indexed for API
+                .limit(pageable.getSize())
+                .totalElements(adminUsers.getTotalElements())
+                .totalPages(totalPages)
+                .isLast(isLast)
+                .build();
     }
 
     /**
-     * Tìm kiếm users theo keyword (username, email, name)
+     * Tìm kiếm users theo keyword (username, email, name) - sử dụng cached search
      *
      * @param keyword Từ khóa tìm kiếm
      * @param pageable Thông tin phân trang
-     * @return Page chứa kết quả tìm kiếm
+     * @return PagedResponse chứa kết quả tìm kiếm
      */
     @Transactional(readOnly = true)
-    public Page<UserListResponse> searchUsers(String keyword, Pageable pageable) {
+    public PagedResponse<UserListResponse> searchUsers(String keyword, Pageable pageable) {
         log.debug("Searching users with keyword: {}", keyword);
 
-        Page<User> users = adminUserRepository.searchUsers(keyword, pageable);
+        // Sử dụng cached search từ view repository
+        com.nemisolv.starter.pagination.Page<com.nemisolv.starter.payload.admin.AdminUserResponse> adminUsers =
+            userManagementViewRepository.searchUsers(keyword, pageable);
 
-        List<UserListResponse> responses = users.getContent().stream()
-                .map(this::toListResponse)
+        List<UserListResponse> responses = adminUsers.getContent().stream()
+                .map(this::fromAdminToListResponse)
                 .collect(Collectors.toList());
 
-        return new PageImpl<>(responses, pageable, users.getTotalElements());
+        return PagedResponse.<UserListResponse>builder()
+                .content(responses)
+                .page(pageable.getPage() + 1)  // Convert from 0-indexed to 1-indexed for API
+                .limit(pageable.getSize())
+                .totalElements(adminUsers.getTotalElements())
+                .totalPages(adminUsers.getTotalPages())
+                .isLast(adminUsers.isLast())
+                .build();
     }
 
     /**
@@ -94,7 +112,7 @@ public class UserManagementService {
     public UserDetailResponse getUserById(Long id) {
         log.debug("Fetching user detail for ID: {}", id);
 
-        User user = adminUserRepository.findByIdWithRolesAndProfile(id)
+        User user = userRepository.findById(id.intValue())
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy user với ID: " + id));
 
         return toDetailResponse(user);
@@ -112,12 +130,12 @@ public class UserManagementService {
         log.info("Creating new user with username: {}", request.getUsername());
 
         // Kiểm tra username đã tồn tại
-        if (adminUserRepository.existsByUsername(request.getUsername())) {
+        if (userRepository.existsByUsername(request.getUsername())) {
             throw new ConflictException("Username đã tồn tại: " + request.getUsername());
         }
 
         // Kiểm tra email đã tồn tại
-        if (adminUserRepository.existsByEmail(request.getEmail())) {
+        if (userRepository.existsByEmail(request.getEmail())) {
             throw new ConflictException("Email đã tồn tại: " + request.getEmail());
         }
 
@@ -147,11 +165,15 @@ public class UserManagementService {
         }
 
         // Lưu user
-        User savedUser = adminUserRepository.save(user);
+        User savedUser = userRepository.save(user);
 
-        // Tạo profile và stats mặc định
-        profileRepository.createDefaultProfile(savedUser.getId(), request.getName());
-        statsRepository.createDefaultStats(savedUser.getId());
+        // Lưu roles vào user_roles table
+        if (!savedUser.getRoles().isEmpty()) {
+            userRepository.saveUserRoles(savedUser.getId(), savedUser.getRoles());
+        }
+
+        // Evict cache sau khi tạo user
+        userManagementViewRepository.evictUserCache();
 
         log.info("Created user successfully with ID: {}", savedUser.getId());
 
@@ -171,12 +193,12 @@ public class UserManagementService {
     public UserDetailResponse updateUser(Long id, UserUpdateRequest request) {
         log.info("Updating user with ID: {}", id);
 
-        User user = adminUserRepository.findById(id)
+        User user = userRepository.findById(id.intValue())
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy user với ID: " + id));
 
         // Update username (nếu có và khác với hiện tại)
         if (request.getUsername() != null && !request.getUsername().equals(user.getUsername())) {
-            if (adminUserRepository.existsByUsername(request.getUsername())) {
+            if (userRepository.existsByUsername(request.getUsername())) {
                 throw new ConflictException("Username đã tồn tại: " + request.getUsername());
             }
             user.setUsername(request.getUsername());
@@ -184,7 +206,7 @@ public class UserManagementService {
 
         // Update email (nếu có và khác với hiện tại)
         if (request.getEmail() != null && !request.getEmail().equals(user.getEmail())) {
-            if (adminUserRepository.existsByEmail(request.getEmail())) {
+            if (userRepository.existsByEmail(request.getEmail())) {
                 throw new ConflictException("Email đã tồn tại: " + request.getEmail());
             }
             user.setEmail(request.getEmail());
@@ -214,12 +236,16 @@ public class UserManagementService {
             user.setRoles(newRoles);
         }
 
-        // Update profile name (nếu có)
-        if (request.getName() != null) {
-            profileRepository.updateName(id, request.getName());
+        User updatedUser = userRepository.save(user);
+
+        // Update roles nếu có
+        if (request.getRoleIds() != null && !updatedUser.getRoles().isEmpty()) {
+            userRepository.saveUserRoles(updatedUser.getId(), updatedUser.getRoles());
         }
 
-        User updatedUser = adminUserRepository.save(user);
+        // Evict cache sau khi update
+        userManagementViewRepository.evictUserCache(id.intValue());
+        userManagementViewRepository.evictUserCache();
 
         log.info("Updated user successfully with ID: {}", id);
 
@@ -236,12 +262,16 @@ public class UserManagementService {
     public void deleteUser(Long id) {
         log.info("Deleting user with ID: {}", id);
 
-        if (!adminUserRepository.existsById(id)) {
+        if (!userRepository.existsById(id.intValue())) {
             throw new ResourceNotFoundException("Không tìm thấy user với ID: " + id);
         }
 
         // CASCADE delete sẽ tự động xóa profile, stats, roles relationship
-        adminUserRepository.deleteById(id);
+        userRepository.deleteById(id.intValue());
+
+        // Evict cache sau khi delete
+        userManagementViewRepository.evictUserCache(id.intValue());
+        userManagementViewRepository.evictUserCache();
 
         log.info("Deleted user successfully with ID: {}", id);
     }
@@ -257,7 +287,7 @@ public class UserManagementService {
     public UserDetailResponse assignRoles(Long userId, AssignRolesRequest request) {
         log.info("Assigning roles to user ID: {}", userId);
 
-        User user = adminUserRepository.findById(userId)
+        User user = userRepository.findById(userId.intValue())
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy user với ID: " + userId));
 
         Set<Role> rolesToAssign = roleRepository.findByIdIn(request.getRoleIds());
@@ -273,7 +303,14 @@ public class UserManagementService {
             user.getRoles().addAll(rolesToAssign);
         }
 
-        User updatedUser = adminUserRepository.save(user);
+        User updatedUser = userRepository.save(user);
+
+        // Update roles trong database
+        userRepository.saveUserRoles(updatedUser.getId(), updatedUser.getRoles());
+
+        // Evict cache
+        userManagementViewRepository.evictUserCache(userId.intValue());
+        userManagementViewRepository.evictUserCache();
 
         log.info("Assigned {} roles to user ID: {}", rolesToAssign.size(), userId);
 
@@ -291,7 +328,7 @@ public class UserManagementService {
     public UserDetailResponse removeRoles(Long userId, Set<Long> roleIds) {
         log.info("Removing roles from user ID: {}", userId);
 
-        User user = adminUserRepository.findById(userId)
+        User user = userRepository.findById(userId.intValue())
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy user với ID: " + userId));
 
         user.getRoles().removeIf(role -> roleIds.contains(role.getId()));
@@ -303,7 +340,14 @@ public class UserManagementService {
             user.setRoles(Set.of(userRole));
         }
 
-        User updatedUser = adminUserRepository.save(user);
+        User updatedUser = userRepository.save(user);
+
+        // Update roles trong database
+        userRepository.saveUserRoles(updatedUser.getId(), updatedUser.getRoles());
+
+        // Evict cache
+        userManagementViewRepository.evictUserCache(userId.intValue());
+        userManagementViewRepository.evictUserCache();
 
         log.info("Removed roles from user ID: {}", userId);
 
@@ -320,11 +364,15 @@ public class UserManagementService {
     public UserDetailResponse activateUser(Long id) {
         log.info("Activating user ID: {}", id);
 
-        User user = adminUserRepository.findById(id)
+        User user = userRepository.findById(id.intValue())
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy user với ID: " + id));
 
         user.setStatus(UserStatus.ACTIVE);
-        User updatedUser = adminUserRepository.save(user);
+        User updatedUser = userRepository.save(user);
+
+        // Evict cache
+        userManagementViewRepository.evictUserCache(id.intValue());
+        userManagementViewRepository.evictUserCache();
 
         log.info("Activated user ID: {}", id);
 
@@ -341,11 +389,15 @@ public class UserManagementService {
     public UserDetailResponse deactivateUser(Long id) {
         log.info("Deactivating user ID: {}", id);
 
-        User user = adminUserRepository.findById(id)
+        User user = userRepository.findById(id.intValue())
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy user với ID: " + id));
 
         user.setStatus(UserStatus.INACTIVE);
-        User updatedUser = adminUserRepository.save(user);
+        User updatedUser = userRepository.save(user);
+
+        // Evict cache
+        userManagementViewRepository.evictUserCache(id.intValue());
+        userManagementViewRepository.evictUserCache();
 
         log.info("Deactivated user ID: {}", id);
 
@@ -353,6 +405,27 @@ public class UserManagementService {
     }
 
     // ============= Private Helper Methods =============
+
+    /**
+     * Convert AdminUserResponse sang UserListResponse
+     */
+    private UserListResponse fromAdminToListResponse(com.nemisolv.starter.payload.admin.AdminUserResponse admin) {
+        return UserListResponse.builder()
+                .id(Long.parseLong(admin.getId()))
+                .username(admin.getUsername())
+                .email(admin.getEmail())
+                .status(admin.getStatus())
+                .emailVerified(admin.isEmailVerified())
+                .provider(admin.getStatus()) // TODO: Add provider to AdminUserResponse if needed
+                .roleNames(admin.getRoles() != null ?
+                    admin.getRoles().stream().collect(Collectors.toSet()) : Set.of())
+                .roleCount(admin.getRoles() != null ? admin.getRoles().size() : 0)
+                .lastLoginAt(admin.getLastLogin())
+                .createdAt(admin.getCreatedAt())
+                .isOnboarded(admin.isOnboarded())
+                .totalXp(null) // TODO: Add to view if needed
+                .build();
+    }
 
     /**
      * Convert User entity sang UserListResponse

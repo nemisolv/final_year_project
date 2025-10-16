@@ -5,6 +5,7 @@ import enum
 
 
 class AnalysisMethod(str, enum.Enum):
+    AZURE = "AZURE"  # Azure Pronunciation Assessment (highest quality)
     WHISPER = "WHISPER"
     VOSK = "VOSK"
     HYBRID = "HYBRID"

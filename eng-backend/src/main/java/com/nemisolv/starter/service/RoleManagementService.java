@@ -4,6 +4,7 @@ import com.nemisolv.starter.entity.Permission;
 import com.nemisolv.starter.entity.Role;
 import com.nemisolv.starter.exception.ConflictException;
 import com.nemisolv.starter.exception.ResourceNotFoundException;
+import com.nemisolv.starter.payload.PagedResponse;
 import com.nemisolv.starter.payload.admin.permission.PermissionResponse;
 import com.nemisolv.starter.payload.admin.role.*;
 import com.nemisolv.starter.repository.PermissionRepository;
@@ -11,9 +12,8 @@ import com.nemisolv.starter.repository.RolePermissionRepository;
 import com.nemisolv.starter.repository.RoleRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
+import com.nemisolv.starter.pagination.Page;
+import com.nemisolv.starter.pagination.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,12 +32,18 @@ public class RoleManagementService {
     private final RolePermissionRepository rolePermissionRepository;
 
     @Transactional(readOnly = true)
-    public Page<RoleResponse> getAllRoles(Pageable pageable) {
+    public PagedResponse<RoleResponse> getAllRoles(Pageable pageable) {
         Page<Role> roles = roleRepository.findAll(pageable);
-        List<RoleResponse> responses = roles.getContent().stream()
-                .map(this::toResponse)
-                .collect(Collectors.toList());
-        return new PageImpl<>(responses, pageable, roles.getTotalElements());
+        return PagedResponse.<RoleResponse>builder()
+                .content(roles.getContent().stream()
+                        .map(this::toResponse)
+                        .collect(Collectors.toList()))
+                .page(pageable.getPageNumber() + 1)
+                .limit(pageable.getPageSize())
+                .totalElements(roles.getTotalElements())
+                .totalPages(roles.getTotalPages())
+                .isLast(roles.isLast())
+                .build();
     }
 
     @Transactional(readOnly = true)

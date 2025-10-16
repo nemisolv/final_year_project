@@ -12,13 +12,13 @@ export function getLoginRedirectPath(user: User): string {
   }
 
   // Redirect based on user role
-  // Admin users go to admin dashboard
+  // Admin users go to management dashboard
   if (user.roles && user.roles.includes('ADMIN')) {
-    return '/admin';
+    return '/management';
   }
 
-  // Default redirect to user dashboard
-  return '/dashboard';
+  // Default redirect to user learning page
+  return '/learning';
 }
 
 /**
@@ -28,9 +28,9 @@ export function getLoginRedirectPath(user: User): string {
  */
 export function getRoleDefaultPath(role: string): string {
   const rolePathMap: Record<string, string> = {
-    ADMIN: '/admin',
-    USER: '/dashboard',
+    ADMIN: '/management',
+    USER: '/learning',
   };
 
-  return rolePathMap[role] || '/dashboard';
+  return rolePathMap[role] || '/learning';
 }

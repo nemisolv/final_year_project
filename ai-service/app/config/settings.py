@@ -34,6 +34,15 @@ class Settings(BaseSettings):
     # Language Tool
     LANGUAGE_TOOL_URL: str = ""
 
+    # Azure Speech Services (Pronunciation Assessment)
+    AZURE_SPEECH_KEY: str = ""
+    AZURE_SPEECH_REGION: str = "eastus"
+
+    # ElevenLabs TTS
+    ELEVENLABS_API_KEY: str = ""
+    ELEVENLABS_MODEL_ID: str = "eleven_multilingual_v2"
+    ELEVENLABS_VOICE_ID: str = "21m00Tcm4TlvDq8ikWAM"  # Default voice: Rachel
+
     # Logging
     LOG_LEVEL: str = "INFO"
 

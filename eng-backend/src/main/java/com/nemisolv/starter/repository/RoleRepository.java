@@ -180,17 +180,26 @@ public class RoleRepository {
         }
     }
 
-    public org.springframework.data.domain.Page<Role> findAll(org.springframework.data.domain.Pageable pageable) {
+    public com.nemisolv.starter.pagination.Page<Role> findAll(com.nemisolv.starter.pagination.Pageable pageable) {
         String countSql = "SELECT COUNT(*) FROM roles";
         Long total = mariadbJdbcTemplate.queryForObject(countSql, Long.class);
         total = total != null ? total : 0;
 
-        String sql = "SELECT * FROM roles ORDER BY name LIMIT ? OFFSET ?";
-        int offset = pageable.getPageNumber() * pageable.getPageSize();
-        List<Role> roles = mariadbJdbcTemplate.query(sql, this::mapRowToRole,
-                pageable.getPageSize(), offset);
+        StringBuilder sql = new StringBuilder("SELECT * FROM roles");
 
-        return new org.springframework.data.domain.PageImpl<>(roles, pageable, total);
+        // Add ORDER BY if sort is present
+        if (pageable.getSort() != null && pageable.getSort().isSorted()) {
+            sql.append(" ORDER BY ").append(pageable.getSort().toSql());
+        } else {
+            sql.append(" ORDER BY name");
+        }
+
+        sql.append(" LIMIT ? OFFSET ?");
+
+        List<Role> roles = mariadbJdbcTemplate.query(sql.toString(), this::mapRowToRole,
+                pageable.getPageSize(), pageable.getOffset());
+
+        return com.nemisolv.starter.pagination.Page.of(roles, pageable, total);
     }
 
     private Role mapRowToRole(ResultSet rs, int rowNum) throws SQLException {

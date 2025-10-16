@@ -56,9 +56,9 @@ export function AuthGuard({ children }: AuthGuardProps) {
           if (!isOnboarded) {
             router.push(ONBOARDING_ROUTE);
           } else if (currentUser.roles && currentUser.roles.includes('ADMIN')) {
-            router.push('/admin');
+            router.push('/management');
           } else {
-            router.push('/dashboard');
+            router.push('/learning');
           }
           setIsChecking(false);
           return;
@@ -71,12 +71,12 @@ export function AuthGuard({ children }: AuthGuardProps) {
           return;
         }
 
-        // If user is onboarded but trying to access onboarding page, redirect to dashboard
+        // If user is onboarded but trying to access onboarding page, redirect to appropriate page
         if (isOnboarded && pathname === ONBOARDING_ROUTE) {
           if (currentUser.roles && currentUser.roles.includes('ADMIN')) {
-            router.push('/admin');
+            router.push('/management');
           } else {
-            router.push('/dashboard');
+            router.push('/learning');
           }
           setIsChecking(false);
           return;

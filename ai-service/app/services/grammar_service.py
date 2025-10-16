@@ -6,6 +6,7 @@ from app.models.schemas import GrammarCheckRequest, GrammarCheckResponse, Gramma
 from typing import List
 import logging
 import json
+from difflib import SequenceMatcher
 
 logger = logging.getLogger(__name__)
 
@@ -15,10 +16,15 @@ class GrammarService:
         self.model = settings.CLAUDE_MODEL
         self._tool = None
 
-        # Các quy tắc đơn giản, độ tin cậy cao mà LanguageTool có thể tự xử lý
+        # Confidence threshold: Nếu score >= 70 thì dùng LanguageTool, < 70 thì gọi LLM
+        self.CONFIDENCE_THRESHOLD = 70.0
+
+        # Phân loại categories theo độ tin cậy
         self.HIGH_CONFIDENCE_CATEGORIES = {
-            'TYPOS', 'CASING', 'GRAMMAR', 'PUNCTUATION',
-            'CONFUSED_WORDS', 'REDUNDANCY'
+            'TYPOS', 'CASING', 'PUNCTUATION'
+        }
+        self.MEDIUM_CONFIDENCE_CATEGORIES = {
+            'GRAMMAR', 'CONFUSED_WORDS', 'REDUNDANCY'
         }
 
     @property
@@ -30,6 +36,81 @@ class GrammarService:
             except Exception as e:
                 logger.warning(f"LanguageTool not available: {e}. Will use Claude API only.")
         return self._tool
+
+    def _calculate_similarity(self, str1: str, str2: str) -> float:
+        """
+        Tính độ tương đồng giữa 2 chuỗi sử dụng SequenceMatcher.
+        Return: 0.0 - 1.0
+        """
+        return SequenceMatcher(None, str1.lower(), str2.lower()).ratio()
+
+    def _calculate_confidence_score(self, match) -> float:
+        """
+        Tính confidence score dựa trên các yếu tố:
+        1. Category của lỗi (40 điểm)
+        2. Số lượng suggestions (30 điểm)
+        3. Độ tương đồng của suggestion với original (20 điểm)
+        4. Issue type priority (10 điểm)
+
+        Return: 0-100
+        """
+        score = 0.0
+
+        # 1. Category confidence (40 điểm)
+        if match.category in self.HIGH_CONFIDENCE_CATEGORIES:
+            score += 40
+        elif match.category in self.MEDIUM_CONFIDENCE_CATEGORIES:
+            score += 25
+        else:
+            score += 10  # Low confidence categories (style, semantic, etc.)
+
+        # 2. Số lượng suggestions (30 điểm)
+        if match.replacements:
+            num_suggestions = len(match.replacements)
+            if num_suggestions == 1:
+                # Chỉ 1 cách sửa duy nhất -> rất tin cậy
+                score += 30
+            elif num_suggestions <= 3:
+                # 2-3 cách sửa -> tin cậy vừa phải
+                score += 20
+            else:
+                # Quá nhiều cách sửa (>3) -> không chắc chắn
+                score += 10
+        else:
+            # Không có suggestion -> không tin cậy
+            score += 0
+
+        # 3. Độ tương đồng của suggestion với original (20 điểm)
+        if match.replacements:
+            original = match.matchedText if hasattr(match, 'matchedText') else ""
+            if not original:
+                # Fallback: lấy từ offset
+                original = ""
+            suggestion = match.replacements[0]
+
+            if original and suggestion:
+                similarity = self._calculate_similarity(original, suggestion)
+                score += similarity * 20  # 0-20 điểm
+            else:
+                score += 15  # Không xác định được, cho điểm khá để không penalize quá
+
+        # 4. Issue type priority (10 điểm)
+        # LanguageTool có thuộc tính ruleIssueType hoặc kiểm tra qua ruleId
+        if hasattr(match, 'ruleIssueType'):
+            if match.ruleIssueType == 'misspelling':
+                score += 10
+            elif match.ruleIssueType in ['grammar', 'typographical']:
+                score += 8
+            else:
+                score += 5
+        else:
+            # Kiểm tra qua category
+            if match.category in ['TYPOS', 'GRAMMAR']:
+                score += 8
+            else:
+                score += 5
+
+        return min(score, 100.0)
 
     async def check_grammar(self, request: GrammarCheckRequest) -> GrammarCheckResponse:
         try:
@@ -48,19 +129,26 @@ class GrammarService:
                     errors=[]
                 )
 
-            # --- Logic phân loại lỗi ---
-            is_complex = False
-            for match in matches:
-                # Nếu một lỗi không có gợi ý hoặc thuộc danh mục phức tạp,
-                # chúng ta cần LLM để giải thích tốt hơn.
-                if not match.replacements or match.category not in self.HIGH_CONFIDENCE_CATEGORIES:
-                    is_complex = True
-                    break
+            # --- NEW LOGIC: Tính confidence score cho mỗi lỗi ---
+            high_confidence_matches = []
+            low_confidence_matches = []
 
-            # --- Xử lý dựa trên kết quả phân loại ---
-            if not is_complex:
-                # Trường hợp 1: Tất cả lỗi đều đơn giản. Tự động sửa và trả về.
-                logger.info(f"Handling grammar check for text '{request.text[:30]}...' with LanguageTool only.")
+            for match in matches:
+                confidence_score = self._calculate_confidence_score(match)
+                logger.debug(f"Error '{match.matchedText if hasattr(match, 'matchedText') else 'unknown'}' "
+                           f"(Category: {match.category}) -> Confidence: {confidence_score:.2f}")
+
+                if confidence_score >= self.CONFIDENCE_THRESHOLD:
+                    high_confidence_matches.append(match)
+                else:
+                    low_confidence_matches.append(match)
+
+            # --- Xử lý dựa trên confidence score ---
+            if not low_confidence_matches:
+                # Trường hợp 1: TẤT CẢ lỗi đều có confidence cao
+                # -> Dùng LanguageTool trực tiếp (nhanh, deterministic)
+                logger.info(f"All errors have high confidence (>={self.CONFIDENCE_THRESHOLD}). "
+                          f"Using LanguageTool only for text: '{request.text[:30]}...'")
 
                 corrected_text = language_tool_python.utils.correct(request.text, matches)
                 errors: List[GrammarError] = []
@@ -69,7 +157,7 @@ class GrammarService:
                         offset=match.offset,
                         errorLength=match.errorLength,
                         message=match.message,
-                        suggestions=match.replacements
+                        suggestions=match.replacements[:5] if match.replacements else []
                     ))
 
                 return GrammarCheckResponse(
@@ -78,42 +166,65 @@ class GrammarService:
                     errors=errors
                 )
             else:
-                # Trường hợp 2: Có lỗi phức tạp. Sử dụng LLM để có giải thích tốt nhất.
-                logger.info(f"Escalating grammar check for text '{request.text[:30]}...' to LLM.")
+                # Trường hợp 2: CÓ ÍT NHẤT 1 lỗi có confidence thấp
+                # -> Gọi LLM để có explanation và suggestion tốt hơn
+                logger.info(f"Found {len(low_confidence_matches)} low-confidence errors (< {self.CONFIDENCE_THRESHOLD}). "
+                          f"Escalating to LLM for text: '{request.text[:30]}...'")
 
                 error_descriptions = []
                 for match in matches:
+                    confidence = self._calculate_confidence_score(match)
                     error_descriptions.append(
                         f"- Error: '{request.text[match.offset:match.offset+match.errorLength]}' "
-                        f"(Rule: {match.ruleId}). Suggestion: {match.replacements[0] if match.replacements else 'N/A'}. "
+                        f"(Rule: {match.ruleId}, Category: {match.category}, Confidence: {confidence:.1f}/100). "
+                        f"Suggestions: {', '.join(match.replacements[:3]) if match.replacements else 'None'}. "
                         f"Message: {match.message}"
                     )
 
                 prompt = f"""
-                A user has written: "{request.text}"
-                A grammar tool found these errors:
-                {chr(10).join(error_descriptions)}
+A user has written: "{request.text}"
 
-                Act as a friendly English tutor. For each error, provide a simple explanation and suggest a fix.
-                Then, provide the fully corrected text.
+A grammar checking tool (LanguageTool) detected these potential errors:
+{chr(10).join(error_descriptions)}
 
-                Respond in a structured JSON format: {{"originalText": "...", "correctedText": "...", "errors": [{{"offset": ..., "errorLength": ..., "message": "...", "suggestions": ["..."]}}]}}.
-                Ensure "offset" and "errorLength" match the original text exactly.
-                """
+Your task:
+1. Analyze each error carefully
+2. For each error, provide a clear, simple explanation suitable for an English learner
+3. Suggest the best correction(s)
+4. Provide the fully corrected text
+
+Respond in JSON format:
+{{
+  "originalText": "...",
+  "correctedText": "...",
+  "errors": [
+    {{
+      "offset": <int>,
+      "errorLength": <int>,
+      "message": "<clear explanation for learner>",
+      "suggestions": ["<best suggestion>", "<alternative if applicable>"]
+    }}
+  ]
+}}
+
+IMPORTANT:
+- "offset" and "errorLength" must match the original text exactly
+- Keep explanations simple and educational
+- Only include the most relevant suggestions (max 3 per error)
+"""
 
                 response = await self.client.messages.create(
                     model=self.model,
                     max_tokens=settings.CLAUDE_MAX_TOKENS,
                     temperature=settings.CLAUDE_TEMPERATURE,
-                    system="You are a helpful English grammar assistant responding in JSON format.",
+                    system="You are a helpful English grammar assistant. You explain errors clearly and suggest corrections. Always respond in valid JSON format.",
                     messages=[
                         {"role": "user", "content": prompt}
                     ]
                 )
 
                 ai_response_data = response.content[0].text
-                # Try to parse JSON from the response
-                import json
+
                 try:
                     # Clean up potential markdown formatting
                     clean_response = ai_response_data.strip()
@@ -128,7 +239,7 @@ class GrammarService:
                     parsed_data = json.loads(clean_response)
                     return GrammarCheckResponse(**parsed_data)
                 except (json.JSONDecodeError, Exception) as parse_error:
-                    logger.warning(f"Failed to parse LLM response: {parse_error}. Using fallback.")
+                    logger.warning(f"Failed to parse LLM response: {parse_error}. Using LanguageTool fallback.")
                     # Fallback: use LanguageTool corrections
                     corrected_text = language_tool_python.utils.correct(request.text, matches)
                     errors: List[GrammarError] = []
@@ -137,7 +248,7 @@ class GrammarService:
                             offset=match.offset,
                             errorLength=match.errorLength,
                             message=match.message,
-                            suggestions=match.replacements
+                            suggestions=match.replacements[:5] if match.replacements else []
                         ))
                     return GrammarCheckResponse(
                         originalText=request.text,

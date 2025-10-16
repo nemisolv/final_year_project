@@ -1,6 +1,7 @@
 package com.nemisolv.starter.payload;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -9,8 +10,7 @@ import lombok.NoArgsConstructor;
 import java.util.List;
 
 /**
- * Một cấu trúc response chuẩn hóa cho các kết quả được phân trang.
- * Class này là generic và có thể tái sử dụng cho bất kỳ loại dữ liệu nào.
+ * Response cho các kết quả được phân trang.
  * @param <T> Kiểu của dữ liệu trong danh sách nội dung.
  */
 @Getter
@@ -48,5 +48,6 @@ public class PagedResponse<T> {
     /**
      * `true` nếu đây là trang cuối cùng.
      */
+    @JsonProperty("isLast")
     private boolean isLast;
 }

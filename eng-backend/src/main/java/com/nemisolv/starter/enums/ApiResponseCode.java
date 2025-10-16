@@ -37,6 +37,7 @@ public enum ApiResponseCode {
     VALIDATION_ERROR(4002, "Validation failed"),
     INVALID_PARAMETER(4003, "Invalid parameter"),
     ACCESS_DENIED(4031, "Access denied"),
+    CONFLICT(4009, "Resource conflict"),
     DATABASE_ERROR(5001, "Database error occurred"),
 
     OPERATION_FAILED(5000, "Operation failed"),

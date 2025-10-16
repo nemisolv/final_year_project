@@ -10,8 +10,6 @@ import com.nemisolv.starter.service.TestimonialService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -38,14 +36,13 @@ public class TestimonialController {
      */
     @PostMapping("/search")
     @PreAuthorize("hasRole('ADMIN')") // Chỉ ADMIN mới có quyền truy vấn động
-    public ResponseEntity<ApiResponse<PagedResponse<TestimonialResponse>>> searchTestimonials(
+    public ApiResponse<PagedResponse<TestimonialResponse>> searchTestimonials(
             @Valid @RequestBody DynamicQuery query // @Valid để kích hoạt validation
     ) {
         log.info("Received search request for testimonials with query: {}", query);
         PagedResponse<TestimonialResponse> pagedResponse = testimonialService.getTestimonials(query);
 
-        // Trả về response thành công với HTTP status 200 OK
-        return ResponseEntity.ok(ApiResponse.success(pagedResponse, "Testimonials retrieved successfully."));
+        return ApiResponse.success(pagedResponse, "Testimonials retrieved successfully.");
     }
 
     /**
@@ -53,10 +50,10 @@ public class TestimonialController {
      * Sử dụng GET vì đây là một truy vấn đơn giản, không cần tham số phức tạp.
      */
     @GetMapping("/featured")
-    public ResponseEntity<ApiResponse<List<TestimonialResponse>>> getFeaturedTestimonials() {
+    public ApiResponse<List<TestimonialResponse>> getFeaturedTestimonials() {
         log.info("API: Fetching featured testimonials for public display.");
         List<TestimonialResponse> featuredTestimonials = testimonialService.findFeatured();
-        return ResponseEntity.ok(ApiResponse.success(featuredTestimonials, "Featured testimonials retrieved successfully."));
+        return ApiResponse.success(featuredTestimonials, "Featured testimonials retrieved successfully.");
     }
 
 
@@ -66,10 +63,10 @@ public class TestimonialController {
      */
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<TestimonialResponse>> getTestimonialById(@PathVariable Long id) {
+    public ApiResponse<TestimonialResponse> getTestimonialById(@PathVariable Long id) {
         log.info("API: Fetching testimonial with id: {}", id);
         TestimonialResponse testimonial = testimonialService.findTestimonialById(id);
-        return ResponseEntity.ok(ApiResponse.success(testimonial));
+        return ApiResponse.success(testimonial);
     }
 
     // =================================================================
@@ -82,13 +79,12 @@ public class TestimonialController {
      */
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<TestimonialResponse>> createTestimonial(
+    public ApiResponse<TestimonialResponse> createTestimonial(
             @Valid @RequestBody TestimonialCreateRequest createRequest
     ) {
         log.info("API: Creating new testimonial for author: {}", createRequest.getAuthorName());
         TestimonialResponse newTestimonial = testimonialService.createTestimonial(createRequest);
-        // Best Practice: Trả về HTTP Status 201 Created khi tạo mới thành công
-        return new ResponseEntity<>(ApiResponse.success(newTestimonial, "Testimonial created successfully."), HttpStatus.CREATED);
+        return ApiResponse.success(newTestimonial, "Testimonial created successfully.");
     }
 
     /**
@@ -97,13 +93,13 @@ public class TestimonialController {
      */
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<TestimonialResponse>> updateTestimonial(
+    public ApiResponse<TestimonialResponse> updateTestimonial(
             @PathVariable Long id,
             @Valid @RequestBody TestimonialUpdateRequest updateRequest
     ) {
         log.info("API: Updating testimonial with id: {}", id);
         TestimonialResponse updatedTestimonial = testimonialService.updateTestimonial(id, updateRequest);
-        return ResponseEntity.ok(ApiResponse.success(updatedTestimonial, "Testimonial updated successfully."));
+        return ApiResponse.success(updatedTestimonial, "Testimonial updated successfully.");
     }
 
     /**
@@ -112,10 +108,9 @@ public class TestimonialController {
      */
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> deleteTestimonial(@PathVariable Long id) {
+    public ApiResponse<Void> deleteTestimonial(@PathVariable Long id) {
         log.info("API: Deleting testimonial with id: {}", id);
         testimonialService.deleteTestimonial(id);
-        // Best Practice: Trả về HTTP Status 204 No Content khi xóa thành công
-        return ResponseEntity.noContent().build();
+        return ApiResponse.success(null);
     }
 }
